@@ -26,18 +26,82 @@ privacy defaults, theme, and branding integrated into the application.
 
 ---
 
-## New native versions
+## Installation
 
-NordFox is moving to a three-platform native release line—no compatibility
-layer, virtual machine, or browser extension:
+Open the **[official NordFox download page](https://nordfox-sirmir25.pages.dev/#download)**,
+choose your operating system, and download its package. The same files are
+published under **[GitHub Releases](https://github.com/sirmir25/NordFox/releases)**.
 
-| Operating system | Native package | Status |
-|---|---|---|
-| **Windows x86_64** | Full `.exe` installer and portable `.zip` | Release pending |
-| **Linux x86_64** | Portable `.tar.bz2` archive | Release pending |
-| **macOS Apple Silicon** | Native `.dmg` for M-series Macs | Coming soon |
+> [!NOTE]
+> The installation files have not been published yet. Windows and Linux
+> packaging is ready for release; the refreshed Apple Silicon macOS package is
+> still in preparation. The steps below apply as soon as the files appear.
 
-**➡️ [Open the official NordFox website and choose your operating system](https://nordfox-sirmir25.pages.dev/#download)**
+### Windows 10/11 x86_64
+
+#### Installer — recommended
+
+1. Download `NordFox-<version>-windows-x86_64-installer.exe`.
+2. Double-click the installer.
+3. If Microsoft Defender SmartScreen appears, click **More info**, then
+   **Run anyway**. The first release is not code-signed.
+4. Complete the setup wizard.
+5. Open **NordFox** from the Start menu.
+
+#### Portable version
+
+1. Download `NordFox-<version>-windows-x86_64.zip`.
+2. Right-click the archive and choose **Extract All**.
+3. Open the extracted folder and run `firefox.exe`. The application is branded
+   as NordFox and does not need to be installed.
+
+### Linux x86_64
+
+1. Download `NordFox-<version>-linux-x86_64.tar.bz2` and its matching
+   `.sha256` file.
+2. Open a terminal in your Downloads directory and verify the archive:
+
+   ```sh
+   cd ~/Downloads
+   sha256sum -c NordFox-*-linux-x86_64.tar.bz2.sha256
+   ```
+
+3. Extract NordFox into your local applications directory:
+
+   ```sh
+   mkdir -p ~/.local/opt/nordfox
+   tar -xjf NordFox-*-linux-x86_64.tar.bz2 \
+     -C ~/.local/opt/nordfox --strip-components=1
+   ```
+
+4. Launch the browser:
+
+   ```sh
+   ~/.local/opt/nordfox/firefox
+   ```
+
+The portable package stays separate from the Firefox package installed by your
+Linux distribution. To remove NordFox, delete `~/.local/opt/nordfox`.
+
+### macOS Apple Silicon
+
+The native macOS build targets M-series Macs. Intel Macs are not supported.
+
+1. Download `NordFox-<version>-arm64.dmg`.
+2. Double-click the DMG and drag `NordFox.app` into **Applications**.
+3. Eject the NordFox disk image.
+4. Open **Applications**, right-click `NordFox.app`, and choose **Open**.
+5. Confirm **Open** once more if Gatekeeper warns that the app is not
+   notarized. Later launches work normally.
+
+If macOS does not show the confirmation button, first try to launch NordFox,
+then open **System Settings → Privacy & Security** and choose **Open Anyway**.
+
+### Updating NordFox
+
+Automatic updates are disabled. Download the newer package from the website or
+GitHub Releases and replace the existing installation. Your browser profile is
+stored separately and is not removed when the application is replaced.
 
 ## What this is
 
@@ -86,55 +150,6 @@ These are compiled out, not disabled by a pref.
 
 A Nord-palette `userChrome.css` / `userContent.css`, plus a retro start page
 and new-tab page written in TypeScript — local, no network, no telemetry.
-
-## Downloads and installation
-
-Choose your operating system on the
-**[NordFox download page](https://nordfox-sirmir25.pages.dev/#download)**.
-Packages will appear in
-**[GitHub Releases](https://github.com/sirmir25/NordFox/releases)** as they are
-published.
-
-> [!IMPORTANT]
-> Release files are not published yet. Windows and Linux packaging is ready;
-> the Apple Silicon macOS package is still in preparation.
-
-### Windows x86_64 — release pending
-
-1. Download the full `.exe` installer or portable `.zip` from GitHub Releases.
-2. If Microsoft Defender SmartScreen appears, choose **More info**, then
-   **Run anyway**.
-3. Follow the installer and launch NordFox from the Start menu.
-
-The first installer is unsigned. Every published artifact will include a
-matching `.sha256` file.
-
-### Linux x86_64 — release pending
-
-1. Download the native `.tar.bz2` archive from GitHub Releases.
-2. Extract it:
-
-   ```sh
-   tar -xjf NordFox-*-linux-x86_64.tar.bz2
-   ```
-
-3. Launch NordFox:
-
-   ```sh
-   ./nordfox/nordfox
-   ```
-
-The portable archive does not replace your distribution's Firefox package.
-
-### macOS Apple Silicon — coming soon
-
-1. Download the Apple Silicon `.dmg` when it appears in GitHub Releases.
-2. Open the disk image and drag `NordFox.app` into **Applications**.
-3. For the first launch, right-click `NordFox.app`, choose **Open**, then
-   confirm.
-
-The macOS package will target M-series Macs. Until notarization is added,
-macOS may require this one explicit confirmation on first launch.
 
 ## Build
 
