@@ -8,7 +8,6 @@ Usage: python3 patches/apply.py <firefox-source-root>
 
 import sys
 import os
-import re
 
 SRC = sys.argv[1] if len(sys.argv) > 1 else "."
 
@@ -17,19 +16,55 @@ skipped = []
 failed  = []
 
 
+def _read(path):
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
+def _write(path, text):
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(text)
+
+
 def patch(rel_path, old, new, description):
+    patch_group(rel_path, [(old, new)], description)
+
+
+def patch_group(rel_path, edits, description):
+    """Apply one or more edits to a single file, all or nothing.
+
+    Every context is checked before anything is written, so a group can
+    never leave the file half-edited. That matters where the edits are
+    interdependent — rust.mk below has one edit that opens an `ifdef` and
+    another that closes it; applying only the first yields a Makefile with
+    an unbalanced conditional that no re-run would repair.
+
+    An edit whose `new` text is already present is treated as satisfied and
+    dropped from the batch, so re-running is safe and a previously
+    half-applied file gets completed rather than rejected.
+    """
     path = os.path.join(SRC, rel_path)
     if not os.path.exists(path):
         failed.append(f"NOT FOUND: {rel_path}  [{description}]")
         return
-    text = open(path, encoding="utf-8").read()
-    if old not in text:
-        if new in text:
-            skipped.append(f"already applied: {description}")
-        else:
+
+    text = _read(path)
+
+    pending = []
+    for old, new in edits:
+        if old in text:
+            pending.append((old, new))
+        elif new not in text:
             failed.append(f"context not found: {rel_path}  [{description}]")
+            return
+
+    if not pending:
+        skipped.append(f"already applied: {description}")
         return
-    open(path, "w", encoding="utf-8").write(text.replace(old, new, 1))
+
+    for old, new in pending:
+        text = text.replace(old, new, 1)
+    _write(path, text)
     applied.append(f"OK  {description}")
 
 
@@ -165,15 +200,27 @@ patch(
 # attribute group entry" → link failure on libnssckbi.dylib.
 # Gate the auto-Rust-LTO block on MOZ_LTO being defined, so --disable-lto truly
 # disables LTO end-to-end.
-patch(
+#
+# The two edits below MUST land together: the first opens an `ifdef MOZ_LTO`,
+# the second closes it. Applying only one leaves rust.mk with an unbalanced
+# conditional, so they go through patch_group, which writes nothing unless
+# both contexts are found.
+#
+# The closing edit's anchor: the original block ends with five `endif`s for
+# gkrust_gtest, MOZ_CODE_COVERAGE, rustflags_sancov, MOZ_LTO_RUST_CROSS, and
+# MOZ_DEBUG_RUST/DEVELOPER_OPTIONS. We add a sixth. The trailing
+# `ifdef CARGO_INCREMENTAL` line is what makes the run of `endif`s unique.
+patch_group(
     "config/makefiles/rust.mk",
-    """\
+    [
+        (
+            """\
 ifndef DEVELOPER_OPTIONS
 ifndef MOZ_DEBUG_RUST
 # Enable link-time optimization for release builds, but not when linking
 # gkrust_gtest. And not when doing cross-language LTO.
 ifndef MOZ_LTO_RUST_CROSS""",
-    """\
+            """\
 ifndef DEVELOPER_OPTIONS
 ifndef MOZ_DEBUG_RUST
 # RerFire: only auto-enable per-crate Rust LTO when LTO is enabled at all.
@@ -183,17 +230,9 @@ ifdef MOZ_LTO
 # Enable link-time optimization for release builds, but not when linking
 # gkrust_gtest. And not when doing cross-language LTO.
 ifndef MOZ_LTO_RUST_CROSS""",
-    "rust.mk: gate auto Rust LTO on MOZ_LTO (avoid LLVM-22/18 bitcode mismatch)",
-)
-
-# ── 0012: rust.mk – close the MOZ_LTO guard opened by 0011 ──────────
-# The original block ends with five `endif`s for: gkrust_gtest,
-# MOZ_CODE_COVERAGE, rustflags_sancov, MOZ_LTO_RUST_CROSS, MOZ_DEBUG_RUST,
-# DEVELOPER_OPTIONS. We add one more for MOZ_LTO. The unique anchor is the
-# trailing `ifdef CARGO_INCREMENTAL` line.
-patch(
-    "config/makefiles/rust.mk",
-    """\
+        ),
+        (
+            """\
 endif
 endif
 endif
@@ -201,7 +240,7 @@ endif
 endif
 
 ifdef CARGO_INCREMENTAL""",
-    """\
+            """\
 endif
 endif
 endif
@@ -210,7 +249,9 @@ endif
 endif  # RerFire: close MOZ_LTO guard
 
 ifdef CARGO_INCREMENTAL""",
-    "rust.mk: close MOZ_LTO guard before CARGO_INCREMENTAL",
+        ),
+    ],
+    "rust.mk: gate auto Rust LTO on MOZ_LTO (avoid LLVM-22/18 bitcode mismatch)",
 )
 
 # ── REPORT ────────────────────────────────────────────────────

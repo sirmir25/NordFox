@@ -49,6 +49,14 @@ const DEFAULT_DIALS: readonly DialLink[] = [
 const DIALS_KEY = "nordfox.newtab.dials";
 const DIAL_COUNT = 8;
 
+/**
+ * Dial URLs are user-supplied (via prompt) and then written into an <a href>
+ * on every page load, so anything stored once keeps running. Restrict them to
+ * schemes that merely navigate — `javascript:` and `data:` would execute in
+ * the context of this page instead.
+ */
+const ALLOWED_SCHEMES: readonly string[] = ["http:", "https:", "file:", "about:"];
+
 const MONTH_NAMES: readonly string[] = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
@@ -88,7 +96,8 @@ function loadDials(): DialLink[] {
           if (
             typeof item === "object" && item !== null &&
             typeof (item as DialLink).title === "string" &&
-            typeof (item as DialLink).url === "string"
+            typeof (item as DialLink).url === "string" &&
+            isSafeUrl((item as DialLink).url)
           ) {
             dials.push({ title: (item as DialLink).title, url: (item as DialLink).url });
           }
@@ -118,6 +127,14 @@ function setText(id: string, value: string): void {
   const el = $(id);
   if (el !== null) {
     el.textContent = value;
+  }
+}
+
+function isSafeUrl(url: string): boolean {
+  try {
+    return ALLOWED_SCHEMES.indexOf(new URL(url).protocol) !== -1;
+  } catch {
+    return false;
   }
 }
 
@@ -219,6 +236,10 @@ function editDial(index: number): void {
   if (title === null || title.trim() === "") return;
   const url = window.prompt("Dial URL:", current.url);
   if (url === null || url.trim() === "") return;
+  if (!isSafeUrl(url.trim())) {
+    setText("status", "Rejected: dial URLs must be http, https, file, or about.");
+    return;
+  }
   dials[index] = { title: title.trim(), url: url.trim() };
   const persisted = storageSet(JSON.stringify(dials));
   renderDials();

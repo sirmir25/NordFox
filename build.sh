@@ -12,6 +12,12 @@ BUILD_DIR="${SCRIPT_DIR}/build"
 LIBREWOLF_TAG="${LIBREWOLF_TAG:-128.11.0-1}"   # update as needed
 FIREFOX_ESR_VERSION="128.11.0esr"
 
+# Pin the exact LibreWolf commit the patch set is taken from. Git objects are
+# content-addressed, so this is a real integrity check on code we are about to
+# compile and run. Leave empty and `./build.sh fetch` will print the commit it
+# resolved so you can pin it. See fetch_source().
+LIBREWOLF_COMMIT="${LIBREWOLF_COMMIT:-}"
+
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
 info()  { echo -e "${GREEN}[nordfox]${NC} $*"; }
 warn()  { echo -e "${YELLOW}[nordfox]${NC} $*"; }
@@ -24,6 +30,7 @@ check_deps() {
 
   command -v python3   &>/dev/null || missing+=("python3 (brew install python)")
   command -v node      &>/dev/null || missing+=("node (brew install node)")
+  command -v git       &>/dev/null || missing+=("git (xcode-select --install)")
   command -v xcodebuild &>/dev/null || missing+=("Xcode Command Line Tools (xcode-select --install)")
 
   # Accept rustup OR Homebrew rust (cargo + rustc)
@@ -64,11 +71,32 @@ fetch_source() {
 
   info "Downloading LibreWolf ${LIBREWOLF_TAG} source..."
 
-  # LibreWolf releases a tarball of patches + a Firefox ESR tarball
-  local lw_url="https://codeberg.org/librewolf/source/archive/${LIBREWOLF_TAG}.tar.gz"
-  local ff_url="https://archive.mozilla.org/pub/firefox/releases/${FIREFOX_ESR_VERSION}/source/firefox-${FIREFOX_ESR_VERSION}.source.tar.xz"
+  # LibreWolf ships a patch set; Mozilla ships the browser source.
+  #
+  # The patch set is cloned rather than downloaded as an archive: Codeberg
+  # generates archive tarballs on the fly and they are not byte-reproducible,
+  # so there is no stable checksum to pin. A git commit hash IS stable and
+  # content-addressed, which gives us something real to verify against.
+  local lw_dir="librewolf-patches-${LIBREWOLF_TAG}"
+  rm -rf "$lw_dir"
+  git clone --quiet --depth 1 --branch "$LIBREWOLF_TAG" \
+    "https://codeberg.org/librewolf/source.git" "$lw_dir" \
+    || error "Could not clone LibreWolf source at tag ${LIBREWOLF_TAG}"
 
-  curl -L --progress-bar -o "librewolf-${LIBREWOLF_TAG}.tar.gz" "$lw_url"
+  local lw_commit
+  lw_commit="$(git -C "$lw_dir" rev-parse HEAD)"
+  if [[ -n "$LIBREWOLF_COMMIT" ]]; then
+    if [[ "$lw_commit" != "$LIBREWOLF_COMMIT" ]]; then
+      error "LibreWolf commit mismatch!\n  expected: ${LIBREWOLF_COMMIT}\n  actual:   ${lw_commit}\nThe tag was moved or the clone was tampered with. Refusing to build."
+    fi
+    info "LibreWolf commit verified: ${lw_commit}"
+  else
+    warn "LIBREWOLF_COMMIT is unset — the patch set was taken on trust."
+    warn "Pin it so future builds are verifiable:"
+    warn "  LIBREWOLF_COMMIT=${lw_commit}"
+  fi
+
+  local ff_url="https://archive.mozilla.org/pub/firefox/releases/${FIREFOX_ESR_VERSION}/source/firefox-${FIREFOX_ESR_VERSION}.source.tar.xz"
   curl -L --progress-bar -o "firefox-${FIREFOX_ESR_VERSION}.source.tar.xz" "$ff_url"
 
   # Verify the Firefox tarball against Mozilla's published SHA256SUMS
@@ -96,10 +124,6 @@ fetch_source() {
     | grep -m1 '/' | cut -d'/' -f1)
   [[ -d "$ff_extracted" ]] || error "Could not find extracted Firefox directory (looked for: ${ff_extracted})"
   mv "$ff_extracted" "librewolf-${LIBREWOLF_TAG}"
-
-  info "Extracting LibreWolf patches..."
-  tar -xzf "librewolf-${LIBREWOLF_TAG}.tar.gz"
-  mv "source" "librewolf-patches-${LIBREWOLF_TAG}"
 }
 
 # ── APPLY LIBREWOLF PATCHES ──────────────────────────────────
@@ -108,13 +132,37 @@ apply_librewolf_patches() {
   info "Applying LibreWolf patches..."
 
   local patch_dir="${BUILD_DIR}/librewolf-patches-${LIBREWOLF_TAG}/patches"
-  if [[ -d "$patch_dir" ]]; then
-    for p in "${patch_dir}"/*.patch; do
-      [[ -f "$p" ]] || continue
-      info "  Applying $(basename "$p")"
-      patch -p1 --no-backup-if-mismatch < "$p" || warn "  Patch $(basename "$p") had issues (continuing)"
-    done
+  [[ -d "$patch_dir" ]] || error "LibreWolf patch directory not found: ${patch_dir}\nRun './build.sh fetch' first."
+
+  # Every one of these carries a privacy change. A patch that does not apply
+  # means that change is silently absent from a build we would then ship as
+  # "hardened" — so a failure here is fatal, never a warning.
+  #
+  # Three-way check so re-running './build.sh patch' is safe:
+  #   forward dry-run OK  → not yet applied, apply it
+  #   reverse dry-run OK  → already applied, skip
+  #   neither             → the tree does not match the patch set, stop
+  local applied=0 already=0 p name
+  for p in "${patch_dir}"/*.patch; do
+    [[ -f "$p" ]] || continue
+    name="$(basename "$p")"
+    if patch -p1 --dry-run --forward --silent < "$p" >/dev/null 2>&1; then
+      info "  Applying ${name}"
+      patch -p1 --no-backup-if-mismatch --forward --silent < "$p" \
+        || error "LibreWolf patch failed while applying: ${name}\nThe source tree is now partially patched. Delete build/librewolf-${LIBREWOLF_TAG}\nand re-run './build.sh fetch' before retrying."
+      applied=$((applied + 1))
+    elif patch -p1 --dry-run --reverse --silent < "$p" >/dev/null 2>&1; then
+      info "  Already applied: ${name}"
+      already=$((already + 1))
+    else
+      error "LibreWolf patch does not apply: ${name}\nThe Firefox source does not match this LibreWolf patch set — check that\nLIBREWOLF_TAG (${LIBREWOLF_TAG}) and FIREFOX_ESR_VERSION (${FIREFOX_ESR_VERSION}) agree.\nRefusing to continue: the build would be missing this privacy change."
+    fi
+  done
+
+  if (( applied + already == 0 )); then
+    error "No patches found in ${patch_dir} — the LibreWolf clone looks wrong."
   fi
+  info "LibreWolf patches: ${applied} applied, ${already} already present."
 }
 
 # ── APPLY RERFIRE PATCHES ────────────────────────────────────

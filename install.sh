@@ -69,6 +69,22 @@ find_profile() {
   fi
 }
 
+# ── BACKUP ──────────────────────────────────────────────────
+# Preserve whatever the user had before NordFox touched the profile — but
+# only on the FIRST install. Backing up unconditionally means a second run
+# overwrites the original with the copy we installed last time, and the
+# user's own config is gone for good.
+backup_once() {
+  local file="$1"
+  [[ -f "$file" ]] || return 0
+  if [[ -e "${file}.bak" ]]; then
+    info "Keeping existing backup: $(basename "$file").bak"
+    return 0
+  fi
+  cp "$file" "${file}.bak"
+  warn "Backed up existing $(basename "$file") → $(basename "$file").bak"
+}
+
 # ── INSTALL ─────────────────────────────────────────────────
 install_to_profile() {
   local profile="$1"
@@ -80,17 +96,12 @@ install_to_profile() {
   mkdir -p "$chrome_dir"
 
   # 2. Install userChrome.css
-  if [[ -f "${chrome_dir}/userChrome.css" ]]; then
-    cp "${chrome_dir}/userChrome.css" "${chrome_dir}/userChrome.css.bak"
-    warn "Backed up existing userChrome.css → userChrome.css.bak"
-  fi
+  backup_once "${chrome_dir}/userChrome.css"
   cp "${SCRIPT_DIR}/theme/userChrome.css" "${chrome_dir}/userChrome.css"
   info "Installed userChrome.css"
 
   # 3. Install userContent.css
-  if [[ -f "${chrome_dir}/userContent.css" ]]; then
-    cp "${chrome_dir}/userContent.css" "${chrome_dir}/userContent.css.bak"
-  fi
+  backup_once "${chrome_dir}/userContent.css"
   cp "${SCRIPT_DIR}/theme/userContent.css" "${chrome_dir}/userContent.css"
   info "Installed userContent.css"
 
@@ -105,9 +116,7 @@ install_to_profile() {
     theme_out="${SCRIPT_DIR}/theme"
   fi
   if [[ -f "${theme_out}/homepage.html" ]]; then
-    if [[ -f "${chrome_dir}/homepage.html" ]]; then
-      cp "${chrome_dir}/homepage.html" "${chrome_dir}/homepage.html.bak"
-    fi
+    backup_once "${chrome_dir}/homepage.html"
     cp "${theme_out}/homepage.html" "${chrome_dir}/homepage.html"
     [[ -f "${theme_out}/homepage.js" ]] && \
       cp "${theme_out}/homepage.js" "${chrome_dir}/homepage.js"
@@ -132,10 +141,7 @@ install_to_profile() {
   # URL-encode spaces — common in macOS' "Application Support" path.
   local encoded_path="${chrome_dir// /%20}"
   local homepage_url="file://${encoded_path}/homepage.html"
-  if [[ -f "${profile}/user.js" ]]; then
-    cp "${profile}/user.js" "${profile}/user.js.bak"
-    warn "Backed up existing user.js → user.js.bak"
-  fi
+  backup_once "${profile}/user.js"
   # Use a temp file so we don't depend on sed -i flavor differences.
   sed "s|__NORDFOX_HOMEPAGE_URL__|${homepage_url}|g" \
       "${SCRIPT_DIR}/security/user.js" > "${profile}/user.js"

@@ -54,8 +54,25 @@ Or step by step: `./build.sh deps | fetch | patch | build | brand`.
 First build takes 30–90 minutes. `./build.sh brand` re-applies branding and
 rebuilds the DMG from an existing objdir without recompiling.
 
-The Firefox source tarball is checksum-verified against Mozilla's published
-`SHA256SUMS` before extraction.
+### Verifying what you build
+
+The Firefox tarball is checked against Mozilla's published `SHA256SUMS` before
+extraction. The LibreWolf patch set is cloned rather than downloaded as an
+archive, because Codeberg generates archive tarballs on the fly and they are
+not byte-reproducible — a git commit hash is stable and content-addressed, so
+it is something you can actually pin:
+
+```sh
+./build.sh fetch                       # prints the commit it resolved
+export LIBREWOLF_COMMIT=<that hash>    # subsequent fetches verify against it
+```
+
+Without `LIBREWOLF_COMMIT` set the clone is taken on trust and the build warns
+about it.
+
+A LibreWolf patch that fails to apply aborts the build. Each one carries a
+privacy change, and a build missing one of them would still call itself
+hardened.
 
 ## Install theme + prefs only
 

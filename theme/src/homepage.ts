@@ -30,7 +30,7 @@ const RETRO_TIPS: readonly string[] = [
   '<kbd>about:config</kbd> exposes every preference. <b>Here be dragons.</b>',
   'NordFox forces a 100&micro;s precision floor on <code>performance.now()</code> for all callers.',
   'Pocket, Normandy, and the Mozilla updater have been removed at the source level.',
-  'Hardened sandbox: <code>configd</code> is denied to content processes &mdash; no IP leak via interface enumeration.',
+  'DRM (EME), the crash reporter, and the update service are compiled out &mdash; not merely switched off by a pref.',
   'Try <kbd>&#8984;F</kbd> to find on this page &mdash; it works on the start page too.',
   'Use the Customize menu (toolbar &rarr; right-click) to switch to <i>Compact</i> density for a tighter chrome.',
 ];
