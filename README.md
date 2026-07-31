@@ -6,18 +6,17 @@
 
 **A quieter web — hardened Firefox ESR, Nord-styled.**
 
-A reproducible recipe for building privacy-hardened Firefox ESR 140.13 as a
-native Windows x86_64 or Linux x86_64 application, with an Apple Silicon macOS
-package in preparation. The theme, prefs, and branding are built into every
-package.
+**New native desktop editions for Windows, Linux, and macOS.** Each edition
+builds Firefox ESR for its target operating system with NordFox hardening,
+privacy defaults, theme, and branding integrated into the application.
 
-**[Open the NordFox website](https://nordfox-sirmir25.pages.dev/)** ·
+**[Choose your OS on the NordFox website](https://nordfox-sirmir25.pages.dev/#download)** ·
 **[View GitHub Releases](https://github.com/sirmir25/NordFox/releases)**
 
 <p>
 <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-5E81AC?style=flat-square" alt="platform: Windows, Linux, and macOS">
 <img src="https://img.shields.io/badge/base-Firefox%20ESR%20140.13-81A1C1?style=flat-square" alt="base: Firefox ESR 140.13">
-<img src="https://img.shields.io/badge/build-native%20x86__64-88C0D0?style=flat-square" alt="native x86_64 builds">
+<img src="https://img.shields.io/badge/build-native%20desktop-88C0D0?style=flat-square" alt="native desktop builds">
 <img src="https://img.shields.io/badge/license-MIT-8FBCBB?style=flat-square" alt="license: MIT">
 </p>
 
@@ -26,6 +25,19 @@ package.
 </div>
 
 ---
+
+## New native versions
+
+NordFox is moving to a three-platform native release line—no compatibility
+layer, virtual machine, or browser extension:
+
+| Operating system | Native package | Status |
+|---|---|---|
+| **Windows x86_64** | Full `.exe` installer and portable `.zip` | Release pending |
+| **Linux x86_64** | Portable `.tar.bz2` archive | Release pending |
+| **macOS Apple Silicon** | Native `.dmg` for M-series Macs | Coming soon |
+
+**➡️ [Open the official NordFox website and choose your operating system](https://nordfox-sirmir25.pages.dev/#download)**
 
 ## What this is
 
