@@ -1,0 +1,27 @@
+# NordFox native Windows x86_64 release build.
+ac_add_options --target=x86_64-pc-mingw32
+ac_add_options --enable-release
+ac_add_options --disable-debug
+ac_add_options --disable-tests
+ac_add_options --disable-debug-symbols
+
+ac_add_options --with-app-name=nordfox
+ac_add_options --with-branding=browser/branding/unofficial
+ac_add_options --with-redist
+
+ac_add_options --disable-lto
+ac_add_options --enable-hardening
+ac_add_options --disable-crashreporter
+ac_add_options --disable-updater
+ac_add_options --disable-eme
+ac_add_options --enable-sandbox
+ac_add_options --without-wasm-sandboxed-libraries
+
+# clang-cl and the Windows SDK provide the platform hardening flags. Avoid
+# Unix-only CFLAGS here; they are rejected by clang-cl.
+export RUSTFLAGS="-C embed-bitcode=no"
+
+ac_add_options --enable-optimize
+
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-nordfox-windows
+mk_add_options AUTOCLOBBER=1
