@@ -1,0 +1,450 @@
+/* ============================================================
+   NordFox – Classic Firefox 3-29 Theme
+   Targets: Firefox ESR 128+ / LibreWolf 128+
+   ============================================================ */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ── macOS TRAFFIC-LIGHTS STABILITY ──────────────────────────
+   The "buttons jumping" symptom is Firefox animating tab open/close
+   and the URL-bar focus transition. The REAL fix is in user.js:
+     - browser.tabs.animate = false
+     - toolkit.cosmeticAnimations.enabled = false
+     - ui.prefersReducedMotion = 1
+   Here we just pin a few things that still flex:
+     1. The macOS title-bar area CSS variable
+     2. The buttonbox WIDTH (height is left native so the traffic
+        lights aren't clipped to a red sliver)
+     3. The flexible titlebar spacers that DDG-style content shifts
+
+   Critically: NO `height` locks on #titlebar / #TabsToolbar / #nav-bar
+   — Firefox sets those natively to fit the macOS traffic lights, and
+   forcing them clips the native widgets.
+   Also NO `contain: layout` on #navigator-toolbox — that subtly
+   breaks the native traffic-light positioning on macOS.
+*/
+
+/* 1) macOS title-bar area CSS variable — Firefox JS recomputes this
+      on window-state changes; pin it so the reserved space is stable. */
+:root {
+  --mac-titlebar-area-start: 76px !important;
+  --mac-titlebar-area-end:   0px  !important;
+}
+
+/* 2) Lock buttonbox WIDTH only — height stays native (macOS draws
+      the traffic-light widgets at a fixed height; clipping it
+      shows just a red sliver). */
+:root:not([inFullscreen]) #titlebar-buttonbox-container,
+:root:not([inFullscreen]) .titlebar-buttonbox-container,
+:root:not([inFullscreen]) #titlebar-buttonbox,
+:root:-moz-window-inactive #titlebar-buttonbox,
+:root:-moz-window-inactive #titlebar-buttonbox-container {
+  width: 76px !important;
+  min-width: 76px !important;
+  max-width: 76px !important;
+  flex: 0 0 76px !important;
+  margin-inline-start: 0 !important;
+  margin-inline-end: 8px !important;
+  padding: 0 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* 3) Kill flexible titlebar spacers — they grow/shrink based on
+      window-active state and tab count, which is the actual source
+      of the "buttons moving" feeling. */
+.titlebar-spacer,
+hbox.titlebar-spacer {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  flex: 0 0 0 !important;
+  display: none !important;
+}
+
+/* 4) Disable CSS transitions on chrome elements so the few changes
+      that DO happen snap instantly instead of animating between
+      two states (the perceived "jump"). */
+#navigator-toolbox,
+#navigator-toolbox *,
+.tabbrowser-tab,
+.tab-background,
+.tab-content {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* 5) Stable tab widths — adding/removing tabs shouldn't visibly
+      reflow the rest of the tab bar. */
+.tabbrowser-tab[fadein]:not([pinned]) {
+  min-width: 100px !important;
+  max-width: 220px !important;
+  flex: 1 1 200px !important;
+}
+
+/* ── COMPACT DENSITY ─────────────────────────────────────── */
+:root {
+  --tab-min-height: 26px !important;
+  --toolbarbutton-border-radius: 2px !important;
+  --toolbar-field-border-radius: 2px !important;
+  --arrowpanel-border-radius: 3px !important;
+  --panel-border-radius: 3px !important;
+  --toolbarbutton-inner-padding: 3px !important;
+}
+
+/* ── MENU BAR – always visible ───────────────────────────── */
+#toolbar-menubar {
+  visibility: visible !important;
+  height: auto !important;
+  opacity: 1 !important;
+  -moz-box-ordinal-group: 1 !important;
+}
+
+#toolbar-menubar[inactive] {
+  opacity: 1 !important;
+  height: auto !important;
+}
+
+/* ── NAVIGATION TOOLBAR ──────────────────────────────────── */
+#nav-bar {
+  padding-block: 2px !important;
+  -moz-box-ordinal-group: 2 !important;
+}
+
+/* Classic back/forward split buttons */
+#back-button {
+  list-style-image: url("chrome://browser/skin/back.svg") !important;
+  margin-inline-end: 0px !important;
+  border-start-end-radius: 0 !important;
+  border-end-end-radius: 0 !important;
+}
+
+#forward-button {
+  margin-inline-start: 0px !important;
+  border-start-start-radius: 0 !important;
+  border-end-start-radius: 0 !important;
+}
+
+/* Classic stop/reload */
+#stop-reload-button {
+  margin-inline-start: 4px !important;
+}
+
+/* Classic home button – always visible */
+#home-button {
+  display: -moz-box !important;
+  visibility: visible !important;
+}
+
+/* ── URL BAR – classic box style ─────────────────────────── */
+#urlbar,
+#urlbar-input-container {
+  border-radius: 2px !important;
+}
+
+/* "Breakout" is the URL bar's focused-state expansion that pops out
+   of the toolbar flow. Force it to stay in place so the nav-bar
+   doesn't reflow (and visually push surrounding chrome) on focus. */
+#urlbar[breakout],
+#urlbar[breakout][open] {
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 2px !important;
+  margin: 0 !important;
+}
+
+/* No mega-dropdown padding expansion */
+#urlbar[breakout][open] > #urlbar-input-container {
+  padding-block: 0 !important;
+  height: 100% !important;
+}
+
+/* Classic focused URL bar border */
+#urlbar:focus-within {
+  outline-offset: 0px !important;
+}
+
+/* URL bar INPUT TEXT — force black when typing/focused regardless
+   of the OS dark/light theme. The default `currentColor` inherits
+   from the toolbar, which on macOS dark mode is light and becomes
+   unreadable on the white input background. */
+#urlbar,
+#urlbar #urlbar-input,
+#urlbar .urlbar-input,
+#urlbar input.urlbar-input,
+#urlbar[focused] #urlbar-input,
+#urlbar[focused="true"] #urlbar-input,
+#urlbar-input-container input {
+  color: #000000 !important;
+  caret-color: #000000 !important;
+}
+
+/* Make sure the URL bar background stays a known light colour so
+   black text is readable. */
+#urlbar-background,
+#urlbar[focused] #urlbar-background,
+#urlbar > #urlbar-background {
+  background-color: #FFFFFF !important;
+  background-image: none !important;
+}
+
+/* Placeholder text — subtle grey so it doesn't fight the black input */
+#urlbar #urlbar-input::placeholder,
+#urlbar input.urlbar-input::placeholder {
+  color: #6E7280 !important;
+  opacity: 1 !important;
+}
+
+/* Selected text in the URL bar — classic blue selection on black text */
+#urlbar #urlbar-input::selection,
+#urlbar input.urlbar-input::selection {
+  background-color: #88C0D0 !important;
+  color: #000000 !important;
+}
+
+/* Hide one-click star tracking button */
+#star-button-box {
+  display: none !important;
+}
+
+/* Hide "reader mode" icon for classic feel */
+#reader-mode-button {
+  display: none !important;
+}
+
+/* ── TABS – classic curved top style ─────────────────────── */
+#TabsToolbar {
+  -moz-box-ordinal-group: 3 !important;
+}
+
+.tabbrowser-tab {
+  min-width: 100px !important;
+  max-width: 250px !important;
+}
+
+.tab-background {
+  border-radius: 4px 4px 0 0 !important;
+  margin-block-start: 2px !important;
+  border: 1px solid transparent !important;
+  border-bottom: none !important;
+}
+
+.tabbrowser-tab:not([selected]) > .tab-stack > .tab-background {
+  background-color: color-mix(in srgb, currentColor 10%, transparent) !important;
+  border-color: color-mix(in srgb, currentColor 20%, transparent) !important;
+}
+
+.tabbrowser-tab[selected] > .tab-stack > .tab-background {
+  background-color: var(--toolbar-bgcolor) !important;
+  border-color: color-mix(in srgb, currentColor 30%, transparent) !important;
+  box-shadow: 0 -1px 3px rgba(0,0,0,.15) !important;
+}
+
+/* Close button always visible — but ONLY on tabs that are fully
+   rendered (`[fadein]` is set). Without this scope, the close X
+   keeps showing on tabs that are animating out, leaving a "ghost
+   X" floating in the tab strip after you close a tab. */
+.tabbrowser-tab[fadein] .tab-close-button {
+  display: -moz-box !important;
+  visibility: visible !important;
+}
+
+/* Closing-animation: actually collapse the tab away. Firefox
+   removes [fadein] on close, then animates width to 0. We make
+   that animation a hard zero-width so no remnants stay around. */
+.tabbrowser-tab:not([fadein]):not([pinned]) {
+  max-width: 0.1px !important;
+  min-width: 0.1px !important;
+  visibility: collapse !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+.tabbrowser-tab:not([fadein]) .tab-close-button,
+.tabbrowser-tab:not([fadein]) .tab-content,
+.tabbrowser-tab:not([fadein]) .tab-background {
+  display: none !important;
+}
+
+/* Classic tab label */
+.tab-label {
+  font-size: 11px !important;
+}
+
+/* ── BOOKMARKS TOOLBAR ───────────────────────────────────── */
+#PersonalToolbar {
+  -moz-box-ordinal-group: 4 !important;
+  padding-block: 1px !important;
+}
+
+.bookmark-item {
+  font-size: 11px !important;
+  padding-block: 2px !important;
+}
+
+/* ── STATUS BAR / STATUS PANEL ───────────────────────────── */
+#statuspanel {
+  display: -moz-box !important;
+  visibility: visible !important;
+}
+
+#statuspanel-label {
+  font-size: 11px !important;
+  padding: 0 4px !important;
+  border-top: 1px solid ThreeDShadow !important;
+  background-color: var(--toolbar-bgcolor) !important;
+}
+
+/* ── TOOLBAR COLOR SCHEME – classic light gray ───────────── */
+:root {
+  --toolbar-bgcolor: #E8E8E8 !important;
+  --toolbar-color: #000000 !important;
+  --toolbarbutton-hover-background: rgba(0,0,0,0.1) !important;
+  --toolbarbutton-active-background: rgba(0,0,0,0.2) !important;
+}
+
+/* macOS: remove unified toolbar look */
+#navigator-toolbox {
+  border-bottom: 1px solid #B0B0B0 !important;
+}
+
+/* ── FIND BAR ────────────────────────────────────────────── */
+.findbar-closebutton {
+  display: -moz-box !important;
+}
+
+/* ── SIDEBARS – classic border ───────────────────────────── */
+#sidebar-box {
+  border-inline-end: 1px solid ThreeDShadow !important;
+}
+
+/* ── POPUP / CONTEXT MENU ────────────────────────────────── */
+menupopup,
+panel[type="autocomplete-richlistbox"] {
+  border-radius: 3px !important;
+}
+
+/* ── URL BAR DROPDOWN (awesomebar / history) ────────────────
+   The default Firefox urlbarView has a translucent / blurred
+   background that lets page content show through. Make it a
+   solid retro Nord/cream popup matching the rest of the chrome.
+*/
+.urlbarView,
+#urlbar-results,
+#urlbar[open] .urlbarView,
+#urlbar[breakout][open] .urlbarView,
+#urlbar-results > .urlbarView,
+.urlbar-input-container ~ .urlbarView {
+  background-color: #FAF7EE !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  border: 1px solid #BFB8A4 !important;
+  border-top: none !important;
+  border-radius: 0 0 2px 2px !important;
+  box-shadow: 2px 2px 0 #BFB8A4 !important;
+  color: #2E3440 !important;
+  opacity: 1 !important;
+}
+
+/* Rows in the dropdown — each suggestion / history entry */
+.urlbarView-row,
+.urlbarView-row-inner,
+.urlbarView-results > .urlbarView-row {
+  background-color: #FAF7EE !important;
+  background-image: none !important;
+  color: #2E3440 !important;
+  font-family: Verdana, "Lucida Grande", sans-serif !important;
+  border-radius: 0 !important;
+}
+
+/* Hover / keyboard-selected row — old-school yellow-highlight */
+.urlbarView-row:hover,
+.urlbarView-row[selected],
+.urlbarView-row[selected] > .urlbarView-row-inner {
+  background-color: #FFF7D6 !important;
+  background-image: none !important;
+  color: #2E3440 !important;
+}
+
+/* Row title (page name, search suggestion text) */
+.urlbarView-title,
+.urlbarView-row .urlbarView-title {
+  color: #2E3440 !important;
+  font-weight: normal !important;
+}
+.urlbarView-title strong {
+  color: #BF616A !important;
+  font-weight: bold !important;
+}
+
+/* URL / action text — classic Google-2003 green */
+.urlbarView-url,
+.urlbarView-row .urlbarView-url,
+.urlbarView-secondary,
+.urlbarView-action {
+  color: #2C7A2C !important;
+}
+
+/* "Search with X" suggestion header */
+.urlbarView-row[type="tip"],
+.urlbarView-row[dynamicType] {
+  background-color: #ECEFF4 !important;
+  border-bottom: 1px solid #BFB8A4 !important;
+}
+
+/* Bottom row of one-off search engine icons */
+.search-one-offs,
+#urlbar .search-one-offs {
+  background-color: #ECEFF4 !important;
+  background-image: linear-gradient(to bottom,
+    #ECEFF4 0%, #D8DEE9 100%) !important;
+  border-top: 1px solid #BFB8A4 !important;
+}
+.searchbar-engine-one-off-item,
+.search-one-offs > .searchbar-engine-one-off-item {
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+.searchbar-engine-one-off-item:hover {
+  background-color: #FFF7D6 !important;
+  border: 1px outset #BFB8A4 !important;
+}
+
+/* The little gear at the right of search-one-offs */
+.search-setting-button,
+.search-setting-button-compact {
+  background: transparent !important;
+}
+
+/* Favicons stay normal-sized */
+.urlbarView-favicon {
+  filter: none !important;
+}
+
+/* Also make regular menupopups (right-click etc.) solid */
+menupopup,
+panel,
+xul|menupopup {
+  --panel-background: #FAF7EE !important;
+  --panel-color: #2E3440 !important;
+  --panel-border-color: #BFB8A4 !important;
+  background-color: #FAF7EE !important;
+}
+
+/* ── HIDE CRUFT ──────────────────────────────────────────── */
+/* Firefox View button */
+#firefox-view-button {
+  display: none !important;
+}
+
+/* Container label in URL bar */
+#userContext-label {
+  display: -moz-box !important;
+}
+
+/* Pocket button – removed at source, hide if present */
+#save-to-pocket-button {
+  display: none !important;
+}

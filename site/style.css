@@ -1,0 +1,198 @@
+/* ============================================================
+   NordFox website – same retro Firefox-1.x / 2003 skin as the
+   in-browser start page. Nord palette on a beige skeleton.
+   Zero JavaScript; everything static and relative-path.
+   ============================================================ */
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Lucida Grande", Verdana, Tahoma, "Segoe UI", "DejaVu Sans", "Liberation Sans", Geneva, sans-serif;
+  font-size: 12px;
+  color: #2E3440;
+  background: #ECEFF4;
+}
+
+.aurora {
+  height: 3px;
+  background: #5E81AC;
+  background-image: linear-gradient(to right, #BF616A 0%, #EBCB8B 25%, #A3BE8C 50%, #88C0D0 75%, #B48EAD 100%);
+}
+
+.topband {
+  background: #5E81AC;
+  background-image: linear-gradient(to bottom, #81A1C1 0%, #5E81AC 60%, #4C566A 100%);
+  border-bottom: 1px solid #2E3440;
+  padding: 6px 12px;
+  color: #ECEFF4;
+  font-size: 11px;
+  text-shadow: 0 1px 0 rgba(46,52,64,0.45);
+}
+.topband b { color: #ECEFF4; letter-spacing: 0.5px; }
+.topband .right { float: right; }
+.topband a { color: #E5E9F0; text-decoration: underline; }
+
+.container {
+  width: 860px;
+  max-width: calc(100% - 24px);
+  margin: 24px auto 32px auto;
+  background: #FAF7EE;
+  border: 1px solid #BFB8A4;
+  box-shadow: 2px 2px 0 #BFB8A4;
+  box-sizing: border-box;
+}
+
+.header {
+  background: #FFFFFF;
+  background-image: linear-gradient(to bottom, #FFFFFF 0%, #E5E9F0 100%);
+  border-bottom: 1px solid #BFB8A4;
+  padding: 22px 28px;
+}
+.header img.appicon {
+  float: right;
+  width: 96px;
+  height: 96px;
+  margin: -6px 0 0 16px;
+}
+.logo {
+  font-family: "Trebuchet MS", "Lucida Grande", Verdana, "DejaVu Sans", "Liberation Sans", sans-serif;
+  font-weight: bold;
+  font-size: 40px;
+  color: #2E3440;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+.logo .nord { color: #5E81AC; }
+.logo .fox  { color: #BF616A; }
+.tagline {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #4C566A;
+  font-style: italic;
+}
+.header .meta {
+  margin-top: 10px;
+  font-size: 10px;
+  color: #4C566A;
+}
+
+.content { padding: 18px 28px 24px 28px; }
+
+.content h2 {
+  margin: 22px 0 8px 0;
+  font-family: Georgia, "Times New Roman", "Liberation Serif", "DejaVu Serif", serif;
+  font-size: 18px;
+  font-weight: normal;
+  color: #2E3440;
+  border-bottom: 1px dashed #BFB8A4;
+  padding-bottom: 4px;
+}
+.content h2:first-child { margin-top: 4px; }
+.content p { line-height: 1.55; color: #3B4252; }
+.content a { color: #5E81AC; }
+.content a:visited { color: #B48EAD; }
+.content a:hover { color: #BF616A; }
+.content code {
+  font-family: Monaco, Consolas, "DejaVu Sans Mono", "Liberation Mono", "Courier New", monospace;
+  font-size: 11px;
+  background: #ECEFF4;
+  border: 1px solid #D8DEE9;
+  padding: 0 3px;
+}
+
+.panel {
+  margin: 14px 0;
+  border: 1px solid #BFB8A4;
+  background: #FFFFFF;
+}
+.panel .panel-title {
+  background: #ECEFF4;
+  background-image: linear-gradient(to bottom, #ECEFF4 0%, #D8DEE9 100%);
+  border-bottom: 1px solid #BFB8A4;
+  padding: 4px 8px;
+  font-weight: bold;
+  color: #2E3440;
+  font-size: 11px;
+}
+.panel .panel-body { padding: 10px 12px; font-size: 12px; line-height: 1.55; }
+
+.download-box {
+  margin: 14px 0;
+  border: 1px solid #5E81AC;
+  background: #FFFFFF;
+  box-shadow: 2px 2px 0 #D8DEE9;
+}
+.download-box .panel-title {
+  background: #5E81AC;
+  background-image: linear-gradient(to bottom, #81A1C1 0%, #5E81AC 100%);
+  border-bottom: 1px solid #2E3440;
+  color: #ECEFF4;
+  padding: 5px 8px;
+  font-weight: bold;
+  font-size: 12px;
+  text-shadow: 0 1px 0 rgba(46,52,64,0.45);
+}
+.download-box .panel-body { padding: 12px; }
+a.download-btn {
+  display: inline-block;
+  padding: 6px 18px;
+  font-family: Verdana, "DejaVu Sans", "Liberation Sans", sans-serif;
+  font-size: 13px;
+  font-weight: bold;
+  color: #2E3440;
+  background: #ECEFF4;
+  background-image: linear-gradient(to bottom, #FFFFFF 0%, #D8DEE9 100%);
+  border: 2px outset #BFB8A4;
+  text-decoration: none;
+}
+a.download-btn:visited { color: #2E3440; }
+a.download-btn:hover { background-image: linear-gradient(to bottom, #FFFFFF 0%, #E5E9F0 100%); color: #2E3440; }
+a.download-btn:active { border-style: inset; }
+.download-note { margin-top: 8px; font-size: 10px; color: #4C566A; }
+
+ol.steps { margin: 8px 0; padding-left: 24px; line-height: 1.7; }
+ul.features { margin: 8px 0; padding-left: 20px; list-style: square; line-height: 1.7; }
+ul.features li b { color: #2E3440; }
+
+pre.term {
+  margin: 8px 0;
+  padding: 8px 10px;
+  font-family: Monaco, Consolas, "DejaVu Sans Mono", "Liberation Mono", "Courier New", monospace;
+  font-size: 11px;
+  color: #ECEFF4;
+  background: #2E3440;
+  border: 2px inset #BFB8A4;
+  overflow-x: auto;
+}
+
+.shot { text-align: center; }
+.shot img {
+  max-width: 100%;
+  border: 1px solid #BFB8A4;
+}
+
+dl.faq { margin: 8px 0; }
+dl.faq dt { font-weight: bold; margin: 12px 0 3px 0; color: #2E3440; }
+dl.faq dd { margin: 0 0 0 14px; line-height: 1.55; color: #3B4252; }
+
+.statusbar {
+  border-top: 1px solid #BFB8A4;
+  background: #ECEFF4;
+  background-image: linear-gradient(to bottom, #ECEFF4 0%, #D8DEE9 100%);
+  padding: 4px 10px;
+  font-size: 10px;
+  color: #4C566A;
+}
+.statusbar .right { float: right; }
+
+/* ── narrow screens (phones / half-width windows) ─────────── */
+@media (max-width: 720px) {
+  .container { margin: 12px auto 20px auto; }
+  .header { padding: 14px 16px; }
+  .header img.appicon { width: 56px; height: 56px; margin: 0 0 0 10px; }
+  .logo { font-size: 28px; }
+  .content { padding: 12px 16px 18px 16px; }
+  .topband .right { display: none; }
+  a.download-btn { white-space: normal; }
+  pre.term { font-size: 10px; }
+}

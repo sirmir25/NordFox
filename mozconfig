@@ -1,0 +1,95 @@
+# NordFox mozconfig – hardened macOS arm64 build (formerly RerFire)
+# Place this file in the root of the Firefox/LibreWolf source tree
+# as "mozconfig" before running ./mach build
+
+# ── TARGET ───────────────────────────────────────────────────
+ac_add_options --target=aarch64-apple-darwin
+ac_add_options --enable-release
+ac_add_options --disable-debug
+ac_add_options --disable-tests
+ac_add_options --disable-debug-symbols
+
+# ── BRANDING ─────────────────────────────────────────────────
+# `app-name` controls the binary name inside the .app bundle and the
+# obj-dir name. The display name (NordFox) is set via Info.plist edits
+# and (for native widgets) via a localized brand override applied to the
+# `unofficial` branding tree during the build.
+ac_add_options --with-app-name=nordfox
+ac_add_options --with-branding=browser/branding/unofficial
+
+# ── LTO + PGO ────────────────────────────────────────────────
+# LTO disabled: Rust 1.95 uses LLVM 22 internally, C++ uses LLVM 18 (needed
+# for correct NSS/NSPR bindgen). Any LTO mode causes the linker to try reading
+# Rust's LLVM-22 bitcode with LLVM-18 reader → "Unknown attribute kind (102)".
+# To re-enable LTO: upgrade Rust to a version built with LLVM 18, or switch
+# C++ back to LLVM 22 and fix the NSS bindgen issue separately.
+ac_add_options --disable-lto
+# PGO: uncomment after collecting profile data with a first build
+# ac_add_options --enable-profile-use
+# ac_add_options --enable-profile-generate
+
+# ── SECURITY HARDENING ───────────────────────────────────────
+# --enable-hardening adds stack canaries, buffer overflow protection, RELRO,
+# and other compiler hardening flags managed by mach's own pipeline.
+ac_add_options --enable-hardening
+
+# Compiler security flags (compatible with mach's LTO pipeline on macOS)
+# PIE is default on arm64 macOS ld64, so no -Wl,-pie needed.
+# CFI is intentionally omitted: it requires whole-program LTO visibility
+# that conflicts with mach's cross-language LTO setup on macOS arm64.
+export CFLAGS="-fstack-protector-all -D_FORTIFY_SOURCE=2 -fPIC"
+export CXXFLAGS="-fstack-protector-all -D_FORTIFY_SOURCE=2 -fPIC"
+# embed-bitcode=no: prevents Rust from embedding LLVM bitcode in object files.
+# Without this, LLVM-18 linker tries to read LLVM-22 Rust bitcode → fatal error.
+# control-flow-guard is Windows-only, removed.
+export RUSTFLAGS="-C embed-bitcode=no"
+
+# ── STRIP TELEMETRY & STUDIES ────────────────────────────────
+ac_add_options --disable-crashreporter
+ac_add_options --disable-updater          # disable Mozilla update service
+# Normandy removed at source level via patches/apply.py (project_flag only
+# accepts implied origins, cannot be disabled from mozconfig)
+# Telemetry/data-reporting off automatically for non-official builds
+
+# ── REMOVE POCKET ────────────────────────────────────────────
+# No --disable-pocket configure flag exists; Pocket removed via source patch
+# (browser/components/moz.build has "pocket" dir removed, BrowserGlue patched)
+
+# ── REMOVE DRM ──────────────────────────────────────────────
+ac_add_options --disable-eme
+
+# ── REMOVE WEBRTC (optional – comment out if needed) ─────────
+# ac_add_options --disable-webrtc
+
+# ── SANDBOX ──────────────────────────────────────────────────
+ac_add_options --enable-sandbox
+# wasi-sdk not installed; disable WASM library sandboxing for now.
+# To restore: install wasi-sdk and remove this line.
+ac_add_options --without-wasm-sandboxed-libraries
+
+# ── COMPILER ─────────────────────────────────────────────────
+# Firefox ESR 128 was built with LLVM 18. LLVM 22 causes bindgen to
+# generate incompatible NSS/NSPR bindings (opaque types, missing symbols).
+CC="/opt/homebrew/opt/llvm@18/bin/clang"
+CXX="/opt/homebrew/opt/llvm@18/bin/clang++"
+export CC CXX
+
+# Rust tools installed via cargo (cbindgen, etc.)
+export PATH="$HOME/.cargo/bin:$PATH"
+
+# ── OPTIMIZATION ─────────────────────────────────────────────
+ac_add_options --enable-optimize="-O2"
+
+# ── MACOS SDK ────────────────────────────────────────────────
+ac_add_options --with-macos-sdk=$(xcrun --show-sdk-path)
+
+# ── LINKER ───────────────────────────────────────────────────
+# Use Apple ld (ld64 / ld-1267 on Sequoia). toolchain.configure is patched
+# to detect ld-1267 which replaced ld64 in macOS 15 / Xcode 16.
+ac_add_options --enable-linker=ld64
+
+# ── BUILD DIR ────────────────────────────────────────────────
+# NOTE: objdir name stays as obj-rerfire-aarch64 even though the brand is now
+# NordFox — renaming would invalidate the existing incremental build and force
+# a full ~60 min rebuild. Cosmetic only.
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-rerfire-aarch64

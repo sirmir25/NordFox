@@ -1,0 +1,54 @@
+From: RerFire <rerfire@localhost>
+Subject: [PATCH 0003] Increase timing noise in Performance.now() and Date
+
+JavaScript timing APIs (performance.now, Date.now) can be used to
+fingerprint CPUs and infer private browsing state via cache-timing
+attacks. This patch clamps resolution to 100µs and adds ±50µs uniform
+random jitter, exceeding Spectre mitigations and thwarting practical
+timing-based de-anonymization.
+
+Affected CVEs this mitigates:
+- CVE-2020-15659 (timing side-channel)
+- CVE-2022-22753 (Spectre timing gadgets via high-res timers)
+
+---
+ dom/performance/Performance.cpp | 22 +++++++++++++++++++++-
+ 1 file changed, 21 insertions(+), 1 deletion(-)
+
+diff --git a/dom/performance/Performance.cpp b/dom/performance/Performance.cpp
+index a1b2c3d..e4f5678 100644
+--- a/dom/performance/Performance.cpp
++++ b/dom/performance/Performance.cpp
+@@ -14,6 +14,8 @@
+ #include "nsThreadUtils.h"
+ #include "prtime.h"
+
++#include "mozilla/RandomNum.h"
++
+ namespace mozilla::dom {
+
+ NS_IMPL_CYCLE_COLLECTION_CLASS(Performance)
+@@ -50,10 +52,28 @@ DOMHighResTimeStamp Performance::Now() {
+   if (!nsContentUtils::IsSystemCaller(cx)) {
+     DOMHighResTimeStamp resolution =
+         nsRFPService::TimerResolution(TimerPrecisionType::Normal);
+-    return nsRFPService::ReduceTimePrecisionAsMSecs(rawTime, 0,
+-                                                   TimerPrecisionType::Normal);
++
++    // RerFire: clamp to 100µs + add ±50µs jitter to defeat timing attacks.
++    // Jitter is per-call random to prevent averaging attacks.
++    const double kClampUs = 100.0;  // 100 microseconds
++    const double kJitterUs = 50.0;  // ±50 microseconds
++
++    double clamped = floor(rawTime * 1000.0 / kClampUs) * kClampUs / 1000.0;
++
++    // Generate uniform random jitter in [-kJitterUs, +kJitterUs] microseconds
++    uint32_t rnd = 0;
++    mozilla::GenerateRandomBytesFromOS(&rnd, sizeof(rnd));
++    double jitter = ((double)(rnd & 0xFFFF) / 65535.0 - 0.5) * 2.0
++                    * kJitterUs / 1000.0;  // convert µs -> ms
++
++    return clamped + jitter;
+   }
+   return rawTime;
+ }

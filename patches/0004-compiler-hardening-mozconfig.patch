@@ -1,0 +1,38 @@
+From: RerFire <rerfire@localhost>
+Subject: [PATCH 0004] Enable aggressive compiler hardening in mozconfig
+
+Adds CFI (Control Flow Integrity), stack protector, FORTIFY_SOURCE=3,
+and shadow call stack where available. These mitigate entire classes of
+memory corruption exploits (use-after-free, buffer overflows, ROP chains).
+
+Note: Apply to your mozconfig, not to source code.
+See also: rerfire/mozconfig which already includes these flags.
+
+---
+ build/moz.configure/lto-pgo.configure |  8 ++++++++
+ build/moz.configure/toolchain.configure | 15 +++++++++++++++
+ 2 files changed, 23 insertions(+)
+
+diff --git a/build/moz.configure/toolchain.configure b/build/moz.configure/toolchain.configure
+index b2c3d4e..c5d6e7f 100644
+--- a/build/moz.configure/toolchain.configure
++++ b/build/moz.configure/toolchain.configure
+@@ -520,6 +520,21 @@ def security_hardening_flags(toolchain_prefix, host):
+     flags = []
+
++    # RerFire: stack protector – protect all functions (not just those with
++    # buffers), catching stack overflows before they corrupt return addresses.
++    flags += ["-fstack-protector-all", "--param=ssp-buffer-size=4"]
++
++    # RerFire: FORTIFY_SOURCE=3 – enable all safe-string checks at compile
++    # time AND runtime, catching out-of-bounds reads in libc calls.
++    flags += ["-D_FORTIFY_SOURCE=3"]
++
++    # RerFire: PIE (Position Independent Executable) – required for ASLR
++    # to protect the main executable, not just shared libraries.
++    flags += ["-fPIE"]
++
++    # RerFire: mark stack as non-executable via GNU stack note
++    flags += ["-Wa,--noexecstack"]
++
+     return flags

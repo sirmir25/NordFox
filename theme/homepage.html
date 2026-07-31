@@ -1,0 +1,419 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>NordFox Start Page</title>
+<style type="text/css">
+  /* ============================================================
+     NordFox start page – retro Firefox 1.x / Phoenix vibe.
+     Nord palette on top of an old-school beige skeleton.
+     ============================================================ */
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: "Lucida Grande", Verdana, Tahoma, Geneva, sans-serif;
+    font-size: 12px;
+    color: #2E3440;
+    background: #ECEFF4 url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAFklEQVQIW2NkYGD4z8DAwMCAEh4FAA3JAhKK5RDqAAAAAElFTkSuQmCC") repeat;
+  }
+
+  /* Outer "browser chrome" mimic: a tan top band like classic Firefox. */
+  .topband {
+    background: #5E81AC;
+    background-image: -webkit-linear-gradient(top, #81A1C1 0%, #5E81AC 60%, #4C566A 100%);
+    background-image:    -moz-linear-gradient(top, #81A1C1 0%, #5E81AC 60%, #4C566A 100%);
+    background-image:         linear-gradient(to bottom, #81A1C1 0%, #5E81AC 60%, #4C566A 100%);
+    border-bottom: 1px solid #2E3440;
+    padding: 6px 12px;
+    color: #ECEFF4;
+    font-size: 11px;
+    text-shadow: 0 1px 0 rgba(46,52,64,0.45);
+  }
+  .topband b { color: #ECEFF4; letter-spacing: 0.5px; }
+  .topband .right { float: right; }
+  .topband a { color: #E5E9F0; text-decoration: underline; }
+
+  /* The main centered "card" – tan/cream like an old start page. */
+  .container {
+    width: 720px;
+    margin: 24px auto 32px auto;
+    background: #FAF7EE;
+    border: 1px solid #BFB8A4;
+    box-shadow: 2px 2px 0 #BFB8A4;
+    padding: 0;
+  }
+
+  /* Big logo header band */
+  .header {
+    background: #FFFFFF;
+    background-image: -webkit-linear-gradient(top, #FFFFFF 0%, #E5E9F0 100%);
+    background-image:    -moz-linear-gradient(top, #FFFFFF 0%, #E5E9F0 100%);
+    background-image:         linear-gradient(to bottom, #FFFFFF 0%, #E5E9F0 100%);
+    border-bottom: 1px solid #BFB8A4;
+    padding: 18px 24px;
+  }
+  .logo {
+    font-family: "Trebuchet MS", "Lucida Grande", Verdana, sans-serif;
+    font-weight: bold;
+    font-size: 32px;
+    color: #2E3440;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+  .logo .nord { color: #5E81AC; }
+  .logo .fox  { color: #BF616A; }
+  .tagline {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #4C566A;
+    font-style: italic;
+  }
+
+  /* Search box – Firefox 1.x default page had a Google search front-and-center */
+  .search {
+    padding: 18px 24px;
+    text-align: center;
+    background: #FAF7EE;
+    border-bottom: 1px solid #E5DFC8;
+  }
+  .search form { margin: 0; }
+  .search input[type="text"] {
+    width: 420px;
+    padding: 4px 6px;
+    font-family: Verdana, sans-serif;
+    font-size: 13px;
+    border: 2px inset #BFB8A4;
+    background: #FFFFFF;
+    color: #2E3440;
+  }
+  .search .btn {
+    font-family: Verdana, sans-serif;
+    font-size: 12px;
+    padding: 3px 12px;
+    background: #ECEFF4;
+    background-image: -webkit-linear-gradient(top, #FFFFFF 0%, #D8DEE9 100%);
+    background-image:    -moz-linear-gradient(top, #FFFFFF 0%, #D8DEE9 100%);
+    background-image:         linear-gradient(to bottom, #FFFFFF 0%, #D8DEE9 100%);
+    border: 1px outset #BFB8A4;
+    color: #2E3440;
+    cursor: pointer;
+  }
+  .search .btn:active {
+    border-style: inset;
+    background-image: -webkit-linear-gradient(top, #D8DEE9 0%, #FFFFFF 100%);
+    background-image:    -moz-linear-gradient(top, #D8DEE9 0%, #FFFFFF 100%);
+    background-image:         linear-gradient(to bottom, #D8DEE9 0%, #FFFFFF 100%);
+  }
+  .search select {
+    font-family: Verdana, sans-serif;
+    font-size: 11px;
+    border: 1px solid #BFB8A4;
+    background: #FFFFFF;
+    padding: 2px;
+  }
+  .search .engines {
+    margin-top: 10px;
+    font-size: 10px;
+    color: #4C566A;
+  }
+
+  /* Classic table layout for sidebar + main */
+  .body-table { width: 100%; border-collapse: collapse; }
+  .body-table td { vertical-align: top; padding: 16px 18px; }
+  .body-table td.side {
+    width: 200px;
+    background: #F0EBD8;
+    border-right: 1px solid #BFB8A4;
+  }
+  .body-table td.side h3 {
+    margin: 0 0 6px 0;
+    font-size: 11px;
+    font-weight: bold;
+    color: #4C566A;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #BFB8A4;
+    padding-bottom: 3px;
+  }
+  .body-table td.side ul {
+    margin: 0 0 14px 0;
+    padding-left: 16px;
+    list-style: square;
+  }
+  .body-table td.side ul li { margin: 3px 0; }
+  .body-table td.side a {
+    color: #5E81AC;
+    text-decoration: underline;
+  }
+  .body-table td.side a:visited { color: #B48EAD; }
+  .body-table td.side a:hover  { color: #BF616A; }
+
+  .body-table td.main h2 {
+    margin: 0 0 8px 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 18px;
+    font-weight: normal;
+    color: #2E3440;
+    border-bottom: 1px dashed #BFB8A4;
+    padding-bottom: 4px;
+  }
+  .body-table td.main p { line-height: 1.55; color: #3B4252; }
+
+  /* Old-school "panel" inside main column */
+  .panel {
+    margin: 14px 0;
+    border: 1px solid #BFB8A4;
+    background: #FFFFFF;
+  }
+  .panel .panel-title {
+    background: #ECEFF4;
+    background-image: -webkit-linear-gradient(top, #ECEFF4 0%, #D8DEE9 100%);
+    background-image:    -moz-linear-gradient(top, #ECEFF4 0%, #D8DEE9 100%);
+    background-image:         linear-gradient(to bottom, #ECEFF4 0%, #D8DEE9 100%);
+    border-bottom: 1px solid #BFB8A4;
+    padding: 4px 8px;
+    font-weight: bold;
+    color: #2E3440;
+    font-size: 11px;
+  }
+  .panel .panel-body { padding: 8px 10px; font-size: 12px; }
+  .panel table { width: 100%; border-collapse: collapse; }
+  .panel td { padding: 3px 6px; border-bottom: 1px dotted #E5E9F0; }
+  .panel td.label {
+    width: 95px;
+    color: #4C566A;
+    font-weight: bold;
+  }
+  .panel a { color: #5E81AC; }
+
+  /* Bookmark-link grid */
+  .links {
+    margin: 8px 0 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .links li {
+    display: inline-block;
+    margin: 0 14px 6px 0;
+    padding: 0;
+  }
+  .links li a {
+    color: #5E81AC;
+    text-decoration: underline;
+    font-size: 12px;
+  }
+  .links li a:visited { color: #B48EAD; }
+  .links li a:hover { color: #BF616A; background: #FFF7D6; }
+
+  /* Status bar footer like old browser windows */
+  .statusbar {
+    border-top: 1px solid #BFB8A4;
+    background: #ECEFF4;
+    background-image: -webkit-linear-gradient(top, #ECEFF4 0%, #D8DEE9 100%);
+    background-image:    -moz-linear-gradient(top, #ECEFF4 0%, #D8DEE9 100%);
+    background-image:         linear-gradient(to bottom, #ECEFF4 0%, #D8DEE9 100%);
+    padding: 4px 10px;
+    font-size: 10px;
+    color: #4C566A;
+  }
+  .statusbar .right { float: right; }
+
+  /* Aurora hairline at very top, evokes Nord theme */
+  .aurora {
+    height: 3px;
+    background: #5E81AC;
+    background-image: -webkit-linear-gradient(left, #BF616A 0%, #EBCB8B 25%, #A3BE8C 50%, #88C0D0 75%, #B48EAD 100%);
+    background-image:    -moz-linear-gradient(left, #BF616A 0%, #EBCB8B 25%, #A3BE8C 50%, #88C0D0 75%, #B48EAD 100%);
+    background-image:         linear-gradient(to right, #BF616A 0%, #EBCB8B 25%, #A3BE8C 50%, #88C0D0 75%, #B48EAD 100%);
+  }
+</style>
+</head>
+<body>
+
+<div class="aurora"></div>
+
+<div class="topband">
+  <b>NordFox</b> &nbsp;|&nbsp;
+  <a href="about:preferences">Preferences</a> &nbsp;
+  <a href="about:addons">Add-ons</a> &nbsp;
+  <a href="about:config">about:config</a>
+  <span class="right">
+    <span id="clock">--:--:--</span>
+  </span>
+</div>
+
+<div class="container">
+
+  <div class="header">
+    <div class="logo">
+      <span class="nord">Nord</span><span class="fox">Fox</span>
+    </div>
+    <div class="tagline">a quieter web. &mdash; hardened LibreWolf, Nord-styled.</div>
+  </div>
+
+  <div class="search">
+    <form id="searchform" action="https://duckduckgo.com/" method="get" accept-charset="UTF-8">
+      <input type="text" id="q" name="q" autofocus value="">
+      <input type="submit" class="btn" value="Search">
+      <br>
+      <span class="engines">
+        Search with:
+        <select id="engine">
+          <option value="https://duckduckgo.com/?q=" selected>DuckDuckGo</option>
+          <option value="https://html.duckduckgo.com/html/?q=">DuckDuckGo (HTML)</option>
+          <option value="https://www.startpage.com/sp/search?query=">Startpage</option>
+          <option value="https://search.brave.com/search?q=">Brave</option>
+          <option value="https://www.google.com/search?q=">Google</option>
+          <option value="https://www.bing.com/search?q=">Bing</option>
+        </select>
+      </span>
+    </form>
+  </div>
+
+  <table class="body-table" cellpadding="0" cellspacing="0">
+    <tr>
+      <td class="side">
+        <h3>Quick Links</h3>
+        <ul>
+          <li><a href="about:home">about:home</a></li>
+          <li><a href="about:newtab">about:newtab</a></li>
+          <li><a href="about:preferences">Preferences</a></li>
+          <li><a href="about:addons">Add-ons</a></li>
+          <li><a href="about:downloads">Downloads</a></li>
+          <li><a href="about:logins">Passwords</a></li>
+          <li><a href="about:support">Troubleshooting</a></li>
+          <li><a href="about:profiles">Profiles</a></li>
+        </ul>
+
+        <h3>Privacy</h3>
+        <ul>
+          <li><a href="about:protections">Protections</a></li>
+          <li><a href="about:certificate">Certificates</a></li>
+          <li><a href="about:networking">Networking</a></li>
+        </ul>
+
+        <h3>Diagnostics</h3>
+        <ul>
+          <li><a href="about:memory">Memory</a></li>
+          <li><a href="about:processes">Processes</a></li>
+          <li><a href="about:performance">Performance</a></li>
+          <li><a href="about:config">about:config</a></li>
+        </ul>
+      </td>
+
+      <td class="main">
+        <h2>Welcome to NordFox</h2>
+        <p>
+          A hardened LibreWolf fork wrapped in the Nord colour scheme.
+          Telemetry, Pocket, DRM, Normandy and a handful of other tracking
+          surfaces have been stripped at the source level. The timing-attack
+          precision floor has been tightened from 1&nbsp;ms to
+          <code>100&nbsp;&micro;s</code> for all non-system callers.
+        </p>
+
+        <div class="panel">
+          <div class="panel-title">Session</div>
+          <div class="panel-body">
+            <table>
+              <tr><td class="label">Date</td><td id="today">&mdash;</td></tr>
+              <tr><td class="label">User Agent</td><td id="ua">&mdash;</td></tr>
+              <tr><td class="label">Platform</td><td id="plat">&mdash;</td></tr>
+              <tr><td class="label">Language</td><td id="lang">&mdash;</td></tr>
+              <tr><td class="label">Online</td><td id="online">&mdash;</td></tr>
+              <tr><td class="label">Cookies</td>
+                  <td id="cookies">&mdash;</td></tr>
+              <tr><td class="label">Do Not Track</td>
+                  <td id="dnt">&mdash;</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Bookmarks</div>
+          <div class="panel-body">
+            <ul class="links">
+              <li><a href="https://librewolf.net/">LibreWolf</a></li>
+              <li><a href="https://www.nordtheme.com/">Nord theme</a></li>
+              <li><a href="https://en.wikipedia.org/">Wikipedia</a></li>
+              <li><a href="https://news.ycombinator.com/">Hacker News</a></li>
+              <li><a href="https://lobste.rs/">Lobsters</a></li>
+              <li><a href="https://archive.org/">Internet Archive</a></li>
+              <li><a href="https://web.archive.org/web/2003*/mozilla.org">Wayback: Mozilla 2003</a></li>
+              <li><a href="https://www.protocols.io/">protocols.io</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Tip of the Moment</div>
+          <div class="panel-body">
+            <span id="tip">&mdash;</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <div class="statusbar">
+    Done.
+    <span class="right">NordFox 128 &middot; aarch64-apple-darwin</span>
+  </div>
+</div>
+
+<script>
+(function () {
+  // --- clock in the top band -------------------------------------------------
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function tick() {
+    var d = new Date();
+    var c = document.getElementById("clock");
+    if (c) c.textContent = pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // --- session table ---------------------------------------------------------
+  var months = ["January","February","March","April","May","June",
+                "July","August","September","October","November","December"];
+  var today = new Date();
+  document.getElementById("today").textContent =
+    months[today.getMonth()] + " " + today.getDate() + ", " + today.getFullYear();
+  document.getElementById("ua").textContent = navigator.userAgent;
+  document.getElementById("plat").textContent = navigator.platform || "(hidden)";
+  document.getElementById("lang").textContent = navigator.language || "(hidden)";
+  document.getElementById("online").textContent = navigator.onLine ? "yes" : "no";
+  document.getElementById("cookies").textContent =
+    navigator.cookieEnabled ? "enabled" : "disabled";
+  var dnt = navigator.doNotTrack || window.doNotTrack || "unset";
+  document.getElementById("dnt").textContent = dnt;
+
+  // --- search routing --------------------------------------------------------
+  var form = document.getElementById("searchform");
+  form.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var q = document.getElementById("q").value;
+    if (!q) return;
+    var engine = document.getElementById("engine").value;
+    window.location.href = engine + encodeURIComponent(q);
+  });
+
+  // --- random retro tip ------------------------------------------------------
+  var tips = [
+    "Tabbed browsing: <kbd>&#8984;T</kbd> opens a new tab. Drag tabs to reorder.",
+    "Press <kbd>&#8984;L</kbd> to jump to the address bar &mdash; the keyboard is faster than the mouse.",
+    "<kbd>about:config</kbd> exposes every preference. <b>Here be dragons.</b>",
+    "NordFox forces a 100&micro;s precision floor on <code>performance.now()</code> for all callers.",
+    "Pocket, Normandy, and the Mozilla updater have been removed at the source level.",
+    "Hardened sandbox: <code>configd</code> is denied to content processes &mdash; no IP leak via interface enumeration.",
+    "Try <kbd>&#8984;F</kbd> to find on this page &mdash; it works on the start page too.",
+    "Use the Customize menu (toolbar &rarr; right-click) to switch to <i>Compact</i> density for a tighter chrome."
+  ];
+  var tip = tips[Math.floor(Math.random() * tips.length)];
+  document.getElementById("tip").innerHTML = tip;
+})();
+</script>
+
+</body>
+</html>

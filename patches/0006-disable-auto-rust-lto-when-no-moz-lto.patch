@@ -1,0 +1,41 @@
+From: RerFire <rerfire@local>
+Subject: [PATCH] rust.mk: do not auto-enable per-crate Rust LTO when --disable-lto
+
+Mach unconditionally adds `-Clto` and `-Cembed-bitcode=yes` to the release
+Rust build whenever cross-language LTO is not on. With `--disable-lto`,
+`MOZ_LTO_RUST_CROSS` is unset, so this branch fires anyway and forces Rust
+to emit LLVM bitcode (`*.rcgu.o`) into staticlibs.
+
+When rustc and the C++ clang use different LLVM majors (e.g. Rust 1.95
+bundles LLVM 22 while Firefox ESR 128 needs LLVM 18 for the NSS/NSPR
+bindgen pipeline), the C++ linker calls libLTO and fails with:
+
+    ld: could not parse bitcode object file libbuiltins_static.a(...):
+        'Invalid attribute group entry (Producer: 'LLVM22...' Reader: 'LLVM 18...')'
+
+Gate the auto-Rust-LTO block on `MOZ_LTO` being defined so that
+`--disable-lto` truly disables LTO end-to-end. The block then only runs
+when LTO was requested but the Rust side isn't doing the cross-language
+flavor (i.e. C/C++ LTO only) — the original intent.
+
+--- a/config/makefiles/rust.mk
++++ b/config/makefiles/rust.mk
+@@ -85,6 +85,10 @@ endif
+ ifndef DEVELOPER_OPTIONS
+ ifndef MOZ_DEBUG_RUST
++# RerFire: only auto-enable per-crate Rust LTO when LTO is enabled at all.
++# Upstream enables it whenever MOZ_LTO_RUST_CROSS is unset, which forces Rust
++# bitcode into staticlibs and breaks links when rustc's LLVM != C++ clang's.
++ifdef MOZ_LTO
+ # Enable link-time optimization for release builds, but not when linking
+ # gkrust_gtest. And not when doing cross-language LTO.
+ ifndef MOZ_LTO_RUST_CROSS
+@@ -102,6 +106,7 @@ RUSTFLAGS += -Cembed-bitcode=yes
+ endif
+ endif
+ endif
+ endif
+ endif
++endif  # RerFire: close MOZ_LTO guard
+
+ ifdef CARGO_INCREMENTAL

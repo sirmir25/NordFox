@@ -1,0 +1,57 @@
+From: RerFire <rerfire@localhost>
+Subject: [PATCH 0002] Remove Pocket integration at build time
+
+Pocket is a third-party read-later service owned by Mozilla but treated
+as an external service. It sends browsing data and page content to
+getpocket.com. Remove it entirely from the browser chrome.
+
+Ref: https://bugzilla.mozilla.org/show_bug.cgi?id=1712636
+
+---
+ browser/components/moz.build                        |  1 -
+ browser/components/pocket/content/panels/js/main.js |  0 deleted
+ browser/components/BrowserGlue.sys.mjs              |  4 ----
+ browser/base/content/browser-context.inc            |  6 ------
+ 5 files changed, 0 insertions(+), 11 deletions(-)
+
+diff --git a/browser/components/moz.build b/browser/components/moz.build
+index 5d6e7f8..d1e2f3a 100644
+--- a/browser/components/moz.build
++++ b/browser/components/moz.build
+@@ -40,7 +40,6 @@ DIRS += [
+     "originattributes",
+     "pagedata",
+     "pagethumbnails",
+-    "pocket",
+     "preferences",
+     "privatebrowsing",
+     "prompts",
+
+diff --git a/browser/components/BrowserGlue.sys.mjs b/browser/components/BrowserGlue.sys.mjs
+index 6e7f8a9..e2d3f4b 100644
+--- a/browser/components/BrowserGlue.sys.mjs
++++ b/browser/components/BrowserGlue.sys.mjs
+@@ -820,10 +820,6 @@ const JSWINDOWACTORS = {
+   },
+
+-  SaveToPocket: {
+-    parent: { esModuleURI: "chrome://pocket/content/SaveToPocketParent.sys.mjs" },
+-    child: { esModuleURI: "chrome://pocket/content/SaveToPocketChild.sys.mjs" },
+-    allFrames: true,
+-  },
+ };
+
+diff --git a/browser/base/content/browser-context.inc b/browser/base/content/browser-context.inc
+index 7f8a9b0..f3e4d5e 100644
+--- a/browser/base/content/browser-context.inc
++++ b/browser/base/content/browser-context.inc
+@@ -150,12 +150,6 @@
+             id="context-sep-sendpagetodevice"
+             hidden="true"/>
+
+-  <menuitem id="context-pocket"
+-            data-l10n-id="main-context-menu-pocket-save-page"
+-            oncommand="Pocket.savePage(gBrowser, gBrowser.selectedBrowser)"
+-            hidden="true"/>
+-
+   <menuitem id="context-take-screenshot"

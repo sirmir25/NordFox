@@ -1,0 +1,55 @@
+From: RerFire <rerfire@localhost>
+Subject: [PATCH 0005] Tighten content process sandbox policy on macOS
+
+Firefox uses Seatbelt (macOS sandbox profiles) to isolate content
+processes. The default profile allows some filesystem reads and several
+mach service lookups that are not required for web content. This patch
+tightens the policy to deny-first and whitelist only what is known-needed.
+
+Refs:
+- CVE-2021-29951 (sandbox escape via mach port)
+- CVE-2022-26485 (process type confusion via IPC)
+- https://bugzilla.mozilla.org/show_bug.cgi?id=1782559
+
+---
+ security/sandbox/mac/SandboxPolicyContent.mm | 28 +++++++++++++++----
+ 1 file changed, 23 insertions(+), 5 deletions(-)
+
+diff --git a/security/sandbox/mac/SandboxPolicyContent.mm b/security/sandbox/mac/SandboxPolicyContent.mm
+index d1e2f3a..f4e5b6c 100644
+--- a/security/sandbox/mac/SandboxPolicyContent.mm
++++ b/security/sandbox/mac/SandboxPolicyContent.mm
+@@ -1,6 +1,8 @@
+ /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+ /* This Source Code Form is subject to the terms of the Mozilla Public
+  * License, v. 2.0. */
++// RerFire: hardened sandbox policy – tighten mach service and file access
+
+ #include "SandboxPolicyContent.h"
+
+@@ -50,11 +52,29 @@ static const char* SandboxPolicyContentBase = R"SANDBOX(
+   (allow mach-lookup
+     (global-name "com.apple.CoreServices.coreservicesd")
+     (global-name "com.apple.FontServer")
+-    (global-name "com.apple.SystemConfiguration.configd")
+-    (global-name "com.apple.distributed_notifications@1.0")
+-    (global-name "com.apple.logd")
++    ; RerFire: remove configd (used for network interface enumeration – IP leak)
++    ; RerFire: remove distributed_notifications (used for cross-app comms)
++    ; RerFire: remove logd in content processes (logs can leak sensitive data)
+   )
+
++  ; RerFire: block all file writes from content processes except to known dirs
++  (deny file-write* (subpath "/"))
++  (allow file-write*
++    (subpath (param "DARWIN_USER_CACHE_DIR"))
++    (subpath (param "DARWIN_USER_TEMP_DIR"))
++  )
++
++  ; RerFire: block iokit user-client access except for known-safe classes
++  (deny iokit-open)
++  (allow iokit-open
++    (iokit-user-client-class "IOHIDParamUserClient")
++  )
++
+ )SANDBOX";

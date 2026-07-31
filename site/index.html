@@ -1,0 +1,143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NordFox &mdash; a quieter web</title>
+<link rel="icon" type="image/png" href="img/icon.png">
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+
+<div class="aurora"></div>
+
+<div class="topband">
+  <b>NordFox</b> &nbsp;|&nbsp;
+  <a href="#download">Download</a> &nbsp;
+  <a href="#features">Features</a> &nbsp;
+  <a href="#build">Build from source</a> &nbsp;
+  <a href="#faq">FAQ</a>
+  <span class="right">for macOS &middot; Apple Silicon</span>
+</div>
+
+<div class="container">
+
+  <div class="header">
+    <img class="appicon" src="img/icon.png" alt="NordFox icon" width="96" height="96">
+    <div class="logo"><span class="nord">Nord</span><span class="fox">Fox</span></div>
+    <div class="tagline">a quieter web. &mdash; hardened LibreWolf, Nord-styled.</div>
+    <div class="meta">Based on Firefox ESR 128 + LibreWolf patches &middot; aarch64-apple-darwin</div>
+  </div>
+
+  <div class="content">
+
+    <h2 id="download">Download &amp; Install</h2>
+
+    <div class="download-box">
+      <div class="panel-title">NordFox 128.11.0 for macOS (Apple Silicon)</div>
+      <div class="panel-body">
+        <a class="download-btn" href="NordFox-128.11.0-1-arm64.dmg">&#8595;&nbsp; Download NordFox-128.11.0-1-arm64.dmg</a>
+        <div class="download-note">
+          arm64 only (M1 and later). The app is ad-hoc signed &mdash; not notarized by Apple &mdash;
+          so the first launch needs one extra step (below).
+        </div>
+      </div>
+    </div>
+
+    <ol class="steps">
+      <li>Open the downloaded <code>NordFox-128.11.0-1-arm64.dmg</code>.</li>
+      <li>Drag <b>NordFox.app</b> into the <b>Applications</b> folder.</li>
+      <li>First launch: right-click <b>NordFox.app</b> &rarr; <b>Open</b> &rarr; confirm.
+          Or clear the quarantine flag from a terminal:
+          <pre class="term">xattr -dr com.apple.quarantine /Applications/NordFox.app</pre></li>
+      <li>Done. Cmd+T opens the NordFox quick-dial new tab; new windows open the retro start page.</li>
+    </ol>
+
+    <h2 id="features">Features</h2>
+
+    <ul class="features">
+      <li><b>Source-level de-bloat</b> &mdash; Normandy/Shield (remote experiments) and Pocket
+          are removed from the code, not just switched off.</li>
+      <li><b>Timing-attack floor</b> &mdash; <code>performance.now()</code> precision is clamped
+          to 100&nbsp;&micro;s for all non-system callers (Firefox default: 1&nbsp;ms with RFP off).</li>
+      <li><b>Nothing phones home</b> &mdash; built without crash reporter and updater; telemetry,
+          captive-portal pings, and remote recommendations are disabled.</li>
+      <li><b>No DRM</b> &mdash; Widevine/EME are compiled out.</li>
+      <li><b>Private DNS</b> &mdash; DNS-over-HTTPS via Quad9 in TRR-only mode (no system-resolver
+          fallback), plus Encrypted Client Hello to hide SNI.</li>
+      <li><b>Anti-fingerprinting</b> &mdash; resistFingerprinting + fingerprinting protection with
+          letterboxing, canvas randomization, and spoofed window metrics.</li>
+      <li><b>Local-only Safe Browsing</b> &mdash; malware/phishing lists checked locally, no
+          per-download remote lookups.</li>
+      <li><b>Retro chrome</b> &mdash; classic Firefox 1.x look: menu bar, boxed URL bar, square
+          tabs, status bar, and a 2003-style start page. All in the
+          <a href="https://www.nordtheme.com/">Nord</a> palette.</li>
+    </ul>
+
+    <h2 id="screenshot">Screenshot</h2>
+
+    <div class="panel">
+      <div class="panel-title">The NordFox start page</div>
+      <div class="panel-body shot">
+        <img src="img/startpage.png" alt="NordFox retro start page" width="780">
+      </div>
+    </div>
+
+    <h2 id="build">Build from source</h2>
+
+    <p>
+      NordFox is built from the Firefox ESR 128 source with LibreWolf patches on top,
+      followed by NordFox's own patch set. Requirements:
+      <code>python3</code>, <code>node</code>, Xcode Command Line Tools, Rust
+      (<code>brew install rust</code> or rustup), and <code>llvm@18</code>
+      (<code>brew install llvm@18</code> &mdash; the exact major matters, see FAQ).
+    </p>
+
+    <pre class="term">git clone &lt;repo&gt; nordfox &amp;&amp; cd nordfox
+./build.sh all        # fetch + patch + build + brand + DMG</pre>
+
+    <p>
+      A full build takes 30&ndash;90 minutes. Re-branding an existing build
+      (<code>./build.sh brand</code>) takes seconds. To install the theme and the hardened
+      <code>user.js</code> into an existing profile, run <code>./install.sh</code>.
+    </p>
+
+    <h2 id="faq">FAQ</h2>
+
+    <dl class="faq">
+      <dt>Why Apple Silicon only?</dt>
+      <dd>NordFox targets <code>aarch64-apple-darwin</code> exclusively. Nobody has built or
+          tested an Intel binary; the toolchain pins assume arm64.</dd>
+
+      <dt>Why are there no automatic updates?</dt>
+      <dd>The Mozilla updater is compiled out on purpose &mdash; an auto-update channel is also
+          a remote-code channel. Updates ship as new DMGs; replace the app in Applications.</dd>
+
+      <dt>Why is LTO disabled in the build?</dt>
+      <dd>The C++ side is compiled with LLVM&nbsp;18 (ESR 128's NSS bindgen needs it), while
+          Homebrew Rust embeds a newer LLVM. Any LTO mode makes the LLVM&nbsp;18 linker choke on
+          the newer Rust bitcode, so LTO stays off until the two toolchains align.</dd>
+
+      <dt>How does this relate to LibreWolf?</dt>
+      <dd>NordFox is LibreWolf's patch set applied to Firefox ESR 128, plus its own source
+          patches (extra de-bloat, tighter timing precision), a stricter <code>user.js</code>,
+          Nord branding, and the retro theme. Upstream credit:
+          <a href="https://librewolf.net/">librewolf.net</a>.</dd>
+
+      <dt>Something broke on a site I need. What do I flip?</dt>
+      <dd>Most breakage comes from WebGL/WebRTC/service workers being off or TRR-only DNS.
+          All of it is plain prefs &mdash; open <code>about:config</code> and relax the specific
+          pref; the <code>security/user.js</code> in the repo documents every one.</dd>
+    </dl>
+
+  </div>
+
+  <div class="statusbar">
+    Done.
+    <span class="right">NordFox 128.11.0-1 &middot; aarch64-apple-darwin &middot; no cookies, no scripts, no analytics on this page</span>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,533 @@
+/* ============================================================
+   NordFox – Classic page chrome styling + DuckDuckGo retro skin
+   ============================================================ */
+
+@namespace url("http://www.w3.org/1999/xhtml");
+
+/* ── ANTI-FLASH ON NEW TABS ───────────────────────────────────
+   Match the cream NordFox homepage colour so the brief moment
+   between "new tab opening" and "homepage painting" doesn't
+   strobe white-on-dark-chrome.
+*/
+:root[waitforload] > body,
+html:not(:has(body)),
+html > body:empty {
+  background-color: #FAF7EE !important;
+}
+
+/* about:newtab itself — keep it cream while it boots. The autoconfig
+   redirects to the retro homepage, but during the redirect a tiny
+   white flash can otherwise occur. */
+@-moz-document url("about:newtab"), url("about:home"), url("about:blank") {
+  html, body {
+    background-color: #FAF7EE !important;
+    color: #2E3440 !important;
+  }
+  /* Kill the default Firefox newtab UI while autoconfig is taking over */
+  .search-wrapper,
+  .ds-card-grid,
+  .top-sites-list,
+  [class*="sponsored"],
+  [data-l10n-id*="pocket"],
+  .section-title:has([class*="pocket"]),
+  .ds-section-title:has([class*="pocket"]),
+  main {
+    display: none !important;
+  }
+}
+
+/* about:config – readable classic look */
+@-moz-document url("about:config") {
+  body {
+    font-family: monospace !important;
+    font-size: 12px !important;
+  }
+}
+
+/* ============================================================
+   DUCKDUCKGO – early-2000s search results aesthetic
+   Targets the main HTML SERP at duckduckgo.com (the SPA),
+   the lite HTML version, and the homepage. Tuned for both
+   light and dark DDG themes — we override both to a single
+   cream/blue retro skin.
+   ============================================================ */
+@-moz-document domain("duckduckgo.com") {
+
+  /* --- global palette wipe -------------------------------------------- */
+  html, body, #content_homepage, #wrapper, .site-wrapper,
+  #header_wrapper, .header__wrapper, .header,
+  .results_links, .results, .react-results--main,
+  .web-result, [data-testid="result"], .nav-menu__wrap,
+  .badge-link, .module, .module--about {
+    background: #FAF7EE !important;
+    color: #2E3440 !important;
+    font-family: Verdana, "Lucida Grande", Tahoma, sans-serif !important;
+    box-shadow: none !important;
+    border-color: #BFB8A4 !important;
+  }
+
+  /* Aurora hairline at the very top of the page, matches the
+     NordFox homepage. */
+  body::before {
+    content: "";
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+    height: 3px;
+    background: linear-gradient(to right,
+      #BF616A 0%, #EBCB8B 25%, #A3BE8C 50%,
+      #88C0D0 75%, #B48EAD 100%) !important;
+  }
+
+  /* --- header / search bar ------------------------------------------- */
+  #header_wrapper, .header--aside, .header__content,
+  .header__search-wrap, .search-wrap,
+  [class^="HeaderWrap_"], [class*=" HeaderWrap_"] {
+    background: #5E81AC !important;
+    background-image: linear-gradient(to bottom,
+      #81A1C1 0%, #5E81AC 60%, #4C566A 100%) !important;
+    border-bottom: 1px solid #2E3440 !important;
+    color: #ECEFF4 !important;
+    padding: 6px 12px !important;
+  }
+  #header_wrapper *, .header__content *, .search-wrap * {
+    color: #ECEFF4 !important;
+  }
+
+  /* Search input — old "inset" beveled text field. */
+  input[name="q"],
+  #search_form_input, #search_form_input_homepage,
+  [id^="search_form_input"], .search__input,
+  [class*="searchbox"], [class*="SearchBox"],
+  [class*="search__input"] {
+    background: #FFFFFF !important;
+    color: #2E3440 !important;
+    border: 2px inset #BFB8A4 !important;
+    border-radius: 0 !important;
+    font-family: Verdana, sans-serif !important;
+    font-size: 13px !important;
+    padding: 4px 6px !important;
+    box-shadow: none !important;
+    height: auto !important;
+  }
+
+  /* Search submit button — old beveled gray button. */
+  button[type="submit"], input[type="submit"],
+  [id*="search_button"], .search__button,
+  [class*="SearchButton"] {
+    background: #ECEFF4 !important;
+    background-image: linear-gradient(to bottom,
+      #FFFFFF 0%, #D8DEE9 100%) !important;
+    color: #2E3440 !important;
+    border: 1px outset #BFB8A4 !important;
+    border-radius: 0 !important;
+    font-family: Verdana, sans-serif !important;
+    font-size: 12px !important;
+    padding: 3px 12px !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  button[type="submit"]:active, input[type="submit"]:active {
+    border-style: inset !important;
+    background-image: linear-gradient(to bottom,
+      #D8DEE9 0%, #FFFFFF 100%) !important;
+  }
+
+  /* --- DDG logo, replace with a NordFox-style word mark on the home -- */
+  .logo_homepage, .logo_homepage__wrap,
+  [class*="HomeLogo"], .header__logo-wrap {
+    background: transparent !important;
+  }
+  .logo_homepage::after {
+    content: "NordSearch" !important;
+    display: block !important;
+    font-family: "Trebuchet MS", "Lucida Grande", Verdana, sans-serif !important;
+    font-weight: bold !important;
+    font-size: 36px !important;
+    color: #5E81AC !important;
+    letter-spacing: -1px !important;
+    text-shadow: 1px 1px 0 #ECEFF4 !important;
+  }
+
+  /* --- results list — tan card with blue underlined links ----------- */
+  .results > .result, .web-result, [data-testid="result"],
+  article[data-testid="result"], .nrn-react-div [data-testid="result"] {
+    background: #FAF7EE !important;
+    border: 1px solid #BFB8A4 !important;
+    border-radius: 0 !important;
+    margin: 8px 0 !important;
+    padding: 8px 10px !important;
+    box-shadow: 2px 2px 0 #BFB8A4 !important;
+  }
+
+  .result__title, .result__title a,
+  h2[data-testid="result-title-a"], h2 a,
+  [data-testid="result-title-a"], a[data-testid="result-title-a"] {
+    color: #1A3A6E !important;
+    font-family: Georgia, "Times New Roman", serif !important;
+    font-weight: normal !important;
+    font-size: 16px !important;
+    text-decoration: underline !important;
+    background: transparent !important;
+  }
+  .result__title a:visited,
+  [data-testid="result-title-a"]:visited {
+    color: #B48EAD !important;
+  }
+  .result__title a:hover,
+  [data-testid="result-title-a"]:hover {
+    color: #BF616A !important;
+    background: #FFF7D6 !important;
+  }
+
+  .result__url, .result__url__domain, .result__url__full,
+  [data-testid="result-extras-url-link"],
+  .react-link__hover, span[data-testid="result-extras-url-link"] {
+    color: #2C7A2C !important;
+    font-family: Verdana, sans-serif !important;
+    font-size: 11px !important;
+    text-decoration: none !important;
+  }
+
+  .result__snippet, .result__body, .result__extras,
+  [data-result="snippet"], span[data-testid="result-snippet"],
+  .react-results--main span {
+    color: #3B4252 !important;
+    font-family: Verdana, sans-serif !important;
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+  }
+
+  /* Sponsored / ad rows — make them stand out like 2003 banner ads. */
+  .badge--ad, [class*="Ad"][class*="Module"],
+  [data-testid="sponsored-result"] {
+    background: #FFF7D6 !important;
+    border: 1px dashed #BF616A !important;
+  }
+  .badge--ad::before, [data-testid="sponsored-result"]::before {
+    content: "[ Sponsored ]" !important;
+    font-size: 10px !important;
+    color: #BF616A !important;
+    font-weight: bold !important;
+    letter-spacing: 1px !important;
+  }
+
+  /* Side modules (zero-click info, related searches, etc.) */
+  .module, .zci-wrapper, .sidebar-modules,
+  .module--about, .module--row, .related-searches {
+    background: #FFFFFF !important;
+    border: 1px solid #BFB8A4 !important;
+    box-shadow: 2px 2px 0 #BFB8A4 !important;
+    padding: 8px !important;
+    margin: 8px 0 !important;
+  }
+  .module__title, .module--row__title {
+    background: linear-gradient(to bottom,
+      #ECEFF4 0%, #D8DEE9 100%) !important;
+    border-bottom: 1px solid #BFB8A4 !important;
+    padding: 4px 8px !important;
+    font-weight: bold !important;
+    color: #2E3440 !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    margin: -8px -8px 8px -8px !important;
+  }
+
+  /* "More results" button at the bottom */
+  .result--more__btn, button[data-testid="more-button"] {
+    background: #ECEFF4 !important;
+    background-image: linear-gradient(to bottom,
+      #FFFFFF 0%, #D8DEE9 100%) !important;
+    color: #2E3440 !important;
+    border: 1px outset #BFB8A4 !important;
+    border-radius: 0 !important;
+    font-family: Verdana, sans-serif !important;
+    padding: 4px 14px !important;
+    box-shadow: none !important;
+  }
+
+  /* Footer / "settings" / "privacy" links — classic blue underlines */
+  a, .footer a, .nav-menu__item__link {
+    color: #1A3A6E !important;
+    text-decoration: underline !important;
+  }
+  a:visited { color: #B48EAD !important; }
+  a:hover {
+    color: #BF616A !important;
+    background: #FFF7D6 !important;
+  }
+
+  /* Nuke the modern card shadows / blurs DDG loves. */
+  *, *::before, *::after {
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    filter: none !important;
+  }
+  /* (restore the few box-shadows we explicitly wanted) */
+  .results > .result, .web-result, [data-testid="result"],
+  article[data-testid="result"],
+  .module, .zci-wrapper, .module--about {
+    box-shadow: 2px 2px 0 #BFB8A4 !important;
+  }
+}
+
+/* ============================================================
+   RETRO ABOUT: PAGES — settings, addons, config, downloads,
+   logins, protections, certificate, profiles, support, etc.
+   Same cream/Nord palette + beveled buttons + Verdana/Georgia
+   typography as the homepage and DDG skin.
+   ============================================================ */
+@-moz-document
+    url-prefix("about:preferences"),
+    url-prefix("about:addons"),
+    url-prefix("about:downloads"),
+    url-prefix("about:logins"),
+    url-prefix("about:protections"),
+    url-prefix("about:certificate"),
+    url-prefix("about:profiles"),
+    url-prefix("about:support"),
+    url-prefix("about:processes"),
+    url-prefix("about:performance"),
+    url-prefix("about:memory"),
+    url-prefix("about:networking") {
+
+  /* Global palette wipe */
+  :root, html, body, #preferences-body, #main, .main-content,
+  .sidebar, .pane-container, .category, .subcategory,
+  groupbox, dialog, prefpane {
+    background: #FAF7EE !important;
+    color: #2E3440 !important;
+    font-family: Verdana, "Lucida Grande", Tahoma, sans-serif !important;
+    font-size: 12px !important;
+  }
+
+  /* Aurora hairline at top */
+  body::before {
+    content: "";
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+    height: 3px;
+    background: linear-gradient(to right,
+      #BF616A 0%, #EBCB8B 25%, #A3BE8C 50%,
+      #88C0D0 75%, #B48EAD 100%) !important;
+  }
+
+  /* Headers — Georgia serif like the homepage cards */
+  h1, h2, h3, .header-name,
+  .category-name, hbox.header,
+  groupbox > caption > label {
+    font-family: Georgia, "Times New Roman", serif !important;
+    font-weight: normal !important;
+    color: #2E3440 !important;
+    border-bottom: 1px dashed #BFB8A4 !important;
+    padding-bottom: 4px !important;
+    margin-bottom: 8px !important;
+  }
+  h1 { font-size: 20px !important; }
+  h2 { font-size: 16px !important; }
+  h3 { font-size: 14px !important; }
+
+  /* Sidebar — tan column with square-bullet links */
+  #categories, .sidebar,
+  richlistbox[id="categories"] {
+    background: #F0EBD8 !important;
+    border-right: 1px solid #BFB8A4 !important;
+    padding: 8px !important;
+  }
+  .category, richlistitem.category {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 4px 8px !important;
+    color: #4C566A !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+  }
+  .category[selected], richlistitem.category[selected] {
+    background: #5E81AC !important;
+    background-image: linear-gradient(to bottom,
+      #81A1C1 0%, #5E81AC 100%) !important;
+    color: #ECEFF4 !important;
+    border-radius: 0 !important;
+  }
+  .category:hover {
+    background: #FFF7D6 !important;
+  }
+
+  /* Group boxes / panels — beveled card like the homepage */
+  groupbox, .info-box, .pane-content > .pane-box,
+  .panel-section, .preferences-section {
+    background: #FFFFFF !important;
+    border: 1px solid #BFB8A4 !important;
+    border-radius: 0 !important;
+    box-shadow: 2px 2px 0 #BFB8A4 !important;
+    margin: 8px 0 !important;
+    padding: 0 !important;
+  }
+  groupbox > caption {
+    background: #ECEFF4 !important;
+    background-image: linear-gradient(to bottom,
+      #ECEFF4 0%, #D8DEE9 100%) !important;
+    border-bottom: 1px solid #BFB8A4 !important;
+    padding: 4px 8px !important;
+    margin: 0 !important;
+    font-weight: bold !important;
+    font-size: 11px !important;
+    color: #2E3440 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+  }
+
+  /* Buttons — outset bevel, classic gray gradient */
+  button, .button, input[type="button"], input[type="submit"],
+  input[type="reset"], .menulist, menulist, xul|button {
+    background: #ECEFF4 !important;
+    background-image: linear-gradient(to bottom,
+      #FFFFFF 0%, #D8DEE9 100%) !important;
+    color: #2E3440 !important;
+    border: 1px outset #BFB8A4 !important;
+    border-radius: 0 !important;
+    font-family: Verdana, sans-serif !important;
+    font-size: 11px !important;
+    padding: 3px 12px !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    min-height: 0 !important;
+  }
+  button:active, .button:active,
+  input[type="button"]:active, input[type="submit"]:active {
+    border-style: inset !important;
+    background-image: linear-gradient(to bottom,
+      #D8DEE9 0%, #FFFFFF 100%) !important;
+  }
+  button:hover, .button:hover {
+    background-image: linear-gradient(to bottom,
+      #FFFFFF 0%, #ECEFF4 100%) !important;
+  }
+  button[default="true"], .primary {
+    background-image: linear-gradient(to bottom,
+      #88C0D0 0%, #5E81AC 100%) !important;
+    color: #ECEFF4 !important;
+    border-color: #2E3440 !important;
+    text-shadow: 0 1px 0 rgba(46,52,64,0.4) !important;
+  }
+
+  /* Text inputs — inset bevel */
+  input[type="text"], input[type="search"], input[type="email"],
+  input[type="password"], input[type="url"], input[type="number"],
+  textarea, xul|textbox, .textbox-input {
+    background: #FFFFFF !important;
+    color: #2E3440 !important;
+    border: 2px inset #BFB8A4 !important;
+    border-radius: 0 !important;
+    font-family: Verdana, sans-serif !important;
+    font-size: 12px !important;
+    padding: 3px 6px !important;
+    box-shadow: none !important;
+  }
+
+  /* Checkboxes / radios — keep native but accent in Nord blue */
+  input[type="checkbox"], input[type="radio"],
+  checkbox, radio {
+    accent-color: #5E81AC !important;
+  }
+
+  /* Links — classic blue underlined */
+  a, .text-link, label[is="text-link"] {
+    color: #1A3A6E !important;
+    text-decoration: underline !important;
+    background: transparent !important;
+  }
+  a:visited { color: #B48EAD !important; }
+  a:hover {
+    color: #BF616A !important;
+    background: #FFF7D6 !important;
+  }
+
+  /* Search box at the top of about:preferences */
+  #searchInput, .search-input, search-textbox {
+    background: #FFFFFF !important;
+    border: 2px inset #BFB8A4 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Description / help text — softer Nord grey */
+  description, .description, .desc, .info-text, .help-text {
+    color: #4C566A !important;
+    font-size: 11px !important;
+    font-style: italic !important;
+  }
+
+  /* Tables — old-school dotted dividers */
+  table { border-collapse: collapse !important; }
+  th {
+    background: #ECEFF4 !important;
+    background-image: linear-gradient(to bottom,
+      #ECEFF4 0%, #D8DEE9 100%) !important;
+    border: 1px solid #BFB8A4 !important;
+    padding: 4px 8px !important;
+    font-weight: bold !important;
+    font-size: 11px !important;
+    color: #2E3440 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+  }
+  td {
+    border-bottom: 1px dotted #BFB8A4 !important;
+    padding: 4px 8px !important;
+    font-size: 12px !important;
+  }
+}
+
+/* about:config — make the prefs table monospaced and retro */
+@-moz-document url-prefix("about:config") {
+  body, html {
+    background: #FAF7EE !important;
+    color: #2E3440 !important;
+    font-family: "Courier New", Courier, monospace !important;
+    font-size: 12px !important;
+  }
+  .info { background: #FFF7D6 !important; border: 1px dashed #BF616A !important; }
+  table { background: #FFFFFF !important; border: 1px solid #BFB8A4 !important; }
+  td.cell-name {
+    color: #1A3A6E !important;
+    font-weight: bold !important;
+  }
+  td.cell-value { color: #2E3440 !important; }
+  tr.has-user-value td.cell-name { color: #BF616A !important; }
+  input[type="text"], input[type="search"] {
+    background: #FFFFFF !important;
+    border: 2px inset #BFB8A4 !important;
+    border-radius: 0 !important;
+    font-family: "Courier New", monospace !important;
+  }
+}
+
+/* DDG-lite HTML version */
+@-moz-document domain("html.duckduckgo.com") {
+  html, body {
+    background: #FAF7EE !important;
+    color: #2E3440 !important;
+    font-family: Verdana, sans-serif !important;
+  }
+  .result__title a {
+    color: #1A3A6E !important;
+    font-family: Georgia, serif !important;
+    text-decoration: underline !important;
+  }
+  .result__url { color: #2C7A2C !important; font-size: 11px !important; }
+  .result__snippet { color: #3B4252 !important; }
+  .result {
+    background: #FFFFFF !important;
+    border: 1px solid #BFB8A4 !important;
+    box-shadow: 2px 2px 0 #BFB8A4 !important;
+    padding: 8px !important;
+    margin: 8px 0 !important;
+  }
+}

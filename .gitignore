@@ -1,0 +1,20 @@
+# ── Build tree & artifacts ───────────────────────────────────
+# build/ holds the extracted Firefox ESR source (~5GB) and the objdir.
+# Everything in it is reproducible via `./build.sh fetch && ./build.sh build`.
+build/
+theme/build/
+*.dmg
+*.tar.gz
+*.tar.xz
+
+# ── Separate projects that happen to live in this directory ──
+# Each has its own git remote; they are not part of NordFox.
+Mirox/
+website/
+
+# ── Local tooling / OS cruft ─────────────────────────────────
+.claude/
+__pycache__/
+*.pyc
+node_modules/
+.DS_Store

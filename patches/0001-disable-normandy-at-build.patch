@@ -1,0 +1,68 @@
+From: RerFire <rerfire@localhost>
+Subject: [PATCH 0001] Remove Normandy/Shield studies at compile time
+
+Normandy is a remote experiment/study system that can push arbitrary
+preference changes, feature flags and "recipes" to all Firefox installs.
+This patch removes it from the build entirely rather than just disabling
+it via prefs (which Mozilla could override via remote settings).
+
+Ref: https://bugzilla.mozilla.org/show_bug.cgi?id=normandy
+
+---
+ toolkit/components/normandy/moz.build        |  2 +-
+ toolkit/components/moz.build                 |  4 ----
+ browser/components/normandy/moz.build        |  2 +-
+ toolkit/modules/ActorManagerParent.sys.mjs   |  4 ----
+ 4 files changed, 1 insertion(+), 11 deletions(-)
+
+diff --git a/toolkit/components/normandy/moz.build b/toolkit/components/normandy/moz.build
+index 1a2b3c4..deadbeef 100644
+--- a/toolkit/components/normandy/moz.build
++++ b/toolkit/components/normandy/moz.build
+@@ -1,6 +1,6 @@
+ # This Source Code Form is subject to the terms of the Mozilla Public
+ # License, v. 2.0.
+
+-if CONFIG["MOZ_NORMANDY"]:
++if False:  # RerFire: Normandy disabled at build time
+     DIRS += [
+         "actions",
+
+diff --git a/toolkit/components/moz.build b/toolkit/components/moz.build
+index 2a3b4c5..deafbeef 100644
+--- a/toolkit/components/moz.build
++++ b/toolkit/components/moz.build
+@@ -60,10 +60,6 @@ DIRS += [
+     "mozintl",
+     "nashornlegacy",
+     "nimbus",
+-    "normandy",
+     "notifications",
+     "osfile",
+     "passwordmgr",
+
+diff --git a/browser/components/normandy/moz.build b/browser/components/normandy/moz.build
+index 3b4c5d6..beefcafe 100644
+--- a/browser/components/normandy/moz.build
++++ b/browser/components/normandy/moz.build
+@@ -1,6 +1,6 @@
+ # This Source Code Form is subject to the terms of the Mozilla Public
+ # License, v. 2.0.
+
+-if CONFIG["MOZ_NORMANDY"]:
++if False:  # RerFire: disabled
+     BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
+
+diff --git a/toolkit/modules/ActorManagerParent.sys.mjs b/toolkit/modules/ActorManagerParent.sys.mjs
+index 4c5d6e7..cafebabe 100644
+--- a/toolkit/modules/ActorManagerParent.sys.mjs
++++ b/toolkit/modules/ActorManagerParent.sys.mjs
+@@ -180,10 +180,6 @@ const JSPROCESSACTORS = {
+
+ const JSWINDOWACTORS = {
+   // ... other actors ...
+-  NormandyContent: {
+-    child: { esModuleURI: "resource://normandy-content/NormandyContentActor.sys.mjs" },
+-    matches: ["https://normandy.cdn.mozilla.net/*"],
+-  },
+ };

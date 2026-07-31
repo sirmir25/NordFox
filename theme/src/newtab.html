@@ -1,0 +1,206 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>New Tab</title>
+<style type="text/css">
+  /* ============================================================
+     NordFox new-tab page – same retro skin as the start page,
+     but a single narrow card: Cmd+T must paint instantly.
+     ============================================================ */
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: "Lucida Grande", Verdana, Tahoma, "Segoe UI", "DejaVu Sans", "Liberation Sans", Geneva, sans-serif;
+    font-size: 12px;
+    color: #2E3440;
+    background: #ECEFF4;
+  }
+
+  .aurora {
+    height: 3px;
+    background: #5E81AC;
+    background-image: linear-gradient(to right, #BF616A 0%, #EBCB8B 25%, #A3BE8C 50%, #88C0D0 75%, #B48EAD 100%);
+  }
+
+  .topband {
+    background: #5E81AC;
+    background-image: linear-gradient(to bottom, #81A1C1 0%, #5E81AC 60%, #4C566A 100%);
+    border-bottom: 1px solid #2E3440;
+    padding: 6px 12px;
+    color: #ECEFF4;
+    font-size: 11px;
+    text-shadow: 0 1px 0 rgba(46,52,64,0.45);
+  }
+  .topband b { color: #ECEFF4; letter-spacing: 0.5px; }
+  .topband .right { float: right; }
+
+  .container {
+    width: 560px;
+    max-width: calc(100% - 24px);
+    margin: 48px auto 32px auto;
+    background: #FAF7EE;
+    border: 1px solid #BFB8A4;
+    box-shadow: 2px 2px 0 #BFB8A4;
+    box-sizing: border-box;
+  }
+
+  .header {
+    background: #FFFFFF;
+    background-image: linear-gradient(to bottom, #FFFFFF 0%, #E5E9F0 100%);
+    border-bottom: 1px solid #BFB8A4;
+    padding: 12px 18px;
+  }
+  .logo {
+    font-family: "Trebuchet MS", "Lucida Grande", Verdana, "DejaVu Sans", "Liberation Sans", sans-serif;
+    font-weight: bold;
+    font-size: 22px;
+    color: #2E3440;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+  .logo .nord { color: #5E81AC; }
+  .logo .fox  { color: #BF616A; }
+  .header .date {
+    float: right;
+    margin-top: 6px;
+    font-size: 11px;
+    color: #4C566A;
+    font-style: italic;
+  }
+
+  .search {
+    padding: 16px 18px;
+    text-align: center;
+    border-bottom: 1px solid #E5DFC8;
+  }
+  .search form { margin: 0; }
+  .search input[type="text"] {
+    width: 340px;
+    max-width: 60%;
+    box-sizing: border-box;
+    padding: 4px 6px;
+    font-family: Verdana, "DejaVu Sans", "Liberation Sans", sans-serif;
+    font-size: 13px;
+    border: 2px inset #BFB8A4;
+    background: #FFFFFF;
+    color: #2E3440;
+  }
+  .search .btn {
+    font-family: Verdana, "DejaVu Sans", "Liberation Sans", sans-serif;
+    font-size: 12px;
+    padding: 3px 12px;
+    background: #ECEFF4;
+    background-image: linear-gradient(to bottom, #FFFFFF 0%, #D8DEE9 100%);
+    border: 1px outset #BFB8A4;
+    color: #2E3440;
+    cursor: pointer;
+  }
+  .search .btn:active {
+    border-style: inset;
+    background-image: linear-gradient(to bottom, #D8DEE9 0%, #FFFFFF 100%);
+  }
+  .search select {
+    font-family: Verdana, "DejaVu Sans", "Liberation Sans", sans-serif;
+    font-size: 11px;
+    border: 1px solid #BFB8A4;
+    background: #FFFFFF;
+    padding: 2px;
+    margin-left: 6px;
+  }
+
+  .dials {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .dials td {
+    width: 25%;
+    border: 1px solid #E5DFC8;
+    padding: 0;
+  }
+  .dials a {
+    display: block;
+    padding: 14px 6px;
+    text-align: center;
+    color: #5E81AC;
+    text-decoration: none;
+    font-size: 11px;
+    background: #FFFFFF;
+  }
+  .dials a:visited { color: #B48EAD; }
+  .dials a:hover { background: #FFF7D6; color: #BF616A; }
+  .dials a .host {
+    display: block;
+    margin-top: 2px;
+    font-size: 9px;
+    color: #4C566A;
+  }
+  body.editing .dials a { background: #FFF7D6; cursor: crosshair; }
+
+  .statusbar {
+    border-top: 1px solid #BFB8A4;
+    background: #ECEFF4;
+    background-image: linear-gradient(to bottom, #ECEFF4 0%, #D8DEE9 100%);
+    padding: 4px 10px;
+    font-size: 10px;
+    color: #4C566A;
+  }
+  .statusbar .right { float: right; }
+  .statusbar a { color: #5E81AC; }
+
+  /* narrow windows / tiled layouts on any OS */
+  @media (max-width: 480px) {
+    .container { margin: 16px auto 20px auto; }
+    .search input[type="text"] { max-width: 50%; }
+    .dials a { padding: 10px 3px; font-size: 10px; }
+    .dials a .host { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="aurora"></div>
+
+<div class="topband">
+  <b>NordFox</b>
+  <span class="right"><span id="clock">--:--:--</span></span>
+</div>
+
+<div class="container">
+
+  <div class="header">
+    <span class="date" id="today">&mdash;</span>
+    <div class="logo"><span class="nord">Nord</span><span class="fox">Fox</span></div>
+  </div>
+
+  <div class="search">
+    <form id="searchform">
+      <input type="text" id="q" name="q" autofocus value="">
+      <input type="submit" class="btn" value="Search">
+      <select id="engine"><!-- populated by newtab.ts --></select>
+    </form>
+  </div>
+
+  <table class="dials" cellpadding="0" cellspacing="0">
+    <tr>
+      <td id="dial-0"></td><td id="dial-1"></td><td id="dial-2"></td><td id="dial-3"></td>
+    </tr>
+    <tr>
+      <td id="dial-4"></td><td id="dial-5"></td><td id="dial-6"></td><td id="dial-7"></td>
+    </tr>
+  </table>
+
+  <div class="statusbar">
+    <span id="status">Done.</span>
+    <span class="right">
+      <a href="#" id="edit-toggle">edit dials</a> &middot;
+      <a href="about:preferences">prefs</a>
+    </span>
+  </div>
+</div>
+
+<script src="newtab.js"></script>
+</body>
+</html>
