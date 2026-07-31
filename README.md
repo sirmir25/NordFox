@@ -7,11 +7,15 @@
 **A quieter web — hardened Firefox ESR, Nord-styled.**
 
 A reproducible recipe for building privacy-hardened Firefox ESR 140.13 as a
-native Windows x86_64 or Linux x86_64 application, with the theme, prefs, and
-branding built into every package.
+native Windows x86_64 or Linux x86_64 application, with an Apple Silicon macOS
+package in preparation. The theme, prefs, and branding are built into every
+package.
+
+**[Open the NordFox website](https://nordfox-sirmir25.pages.dev/)** ·
+**[View GitHub Releases](https://github.com/sirmir25/NordFox/releases)**
 
 <p>
-<img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-5E81AC?style=flat-square" alt="platform: Windows and Linux">
+<img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-5E81AC?style=flat-square" alt="platform: Windows, Linux, and macOS">
 <img src="https://img.shields.io/badge/base-Firefox%20ESR%20140.13-81A1C1?style=flat-square" alt="base: Firefox ESR 140.13">
 <img src="https://img.shields.io/badge/build-native%20x86__64-88C0D0?style=flat-square" alt="native x86_64 builds">
 <img src="https://img.shields.io/badge/license-MIT-8FBCBB?style=flat-square" alt="license: MIT">
@@ -71,15 +75,54 @@ These are compiled out, not disabled by a pref.
 A Nord-palette `userChrome.css` / `userContent.css`, plus a retro start page
 and new-tab page written in TypeScript — local, no network, no telemetry.
 
-## Download
+## Downloads and installation
 
-Use the latest GitHub release:
+Choose your operating system on the
+**[NordFox download page](https://nordfox-sirmir25.pages.dev/#download)**.
+Packages will appear in
+**[GitHub Releases](https://github.com/sirmir25/NordFox/releases)** as they are
+published.
 
-- **Windows x86_64:** full `.exe` installer or portable `.zip`.
-- **Linux x86_64:** native `.tar.bz2` package.
+> [!IMPORTANT]
+> Release files are not published yet. Windows and Linux packaging is ready;
+> the Apple Silicon macOS package is still in preparation.
 
-The Windows installer is currently unsigned, so SmartScreen may require an
-explicit confirmation. Every artifact has a matching `.sha256` file.
+### Windows x86_64 — release pending
+
+1. Download the full `.exe` installer or portable `.zip` from GitHub Releases.
+2. If Microsoft Defender SmartScreen appears, choose **More info**, then
+   **Run anyway**.
+3. Follow the installer and launch NordFox from the Start menu.
+
+The first installer is unsigned. Every published artifact will include a
+matching `.sha256` file.
+
+### Linux x86_64 — release pending
+
+1. Download the native `.tar.bz2` archive from GitHub Releases.
+2. Extract it:
+
+   ```sh
+   tar -xjf NordFox-*-linux-x86_64.tar.bz2
+   ```
+
+3. Launch NordFox:
+
+   ```sh
+   ./nordfox/nordfox
+   ```
+
+The portable archive does not replace your distribution's Firefox package.
+
+### macOS Apple Silicon — coming soon
+
+1. Download the Apple Silicon `.dmg` when it appears in GitHub Releases.
+2. Open the disk image and drag `NordFox.app` into **Applications**.
+3. For the first launch, right-click `NordFox.app`, choose **Open**, then
+   confirm.
+
+The macOS package will target M-series Macs. Until notarization is added,
+macOS may require this one explicit confirmation on first launch.
 
 ## Build
 
@@ -171,6 +214,8 @@ atomic group — nothing is written unless every context resolves.
 ## Caveats
 
 - Windows and Linux packages are x86_64 only.
+- The refreshed macOS package is not published yet and will target Apple
+  Silicon.
 - The Windows installer is unsigned; SmartScreen can warn on first launch.
 - Automatic updates remain disabled. Install a newer NordFox release manually.
 - The legacy macOS script still targets the earlier ESR 128 arm64 build tree.
