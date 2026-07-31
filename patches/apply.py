@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-RerFire source patcher – applies edits by string substitution.
+NordFox source patcher – applies edits by string substitution.
 Robust against line-number drift between Firefox ESR point releases.
 
 Usage: python3 patches/apply.py <firefox-source-root>
@@ -28,6 +28,28 @@ def _write(path, text):
 
 def patch(rel_path, old, new, description):
     patch_group(rel_path, [(old, new)], description)
+
+
+def optional_patch(rel_path, old, new, description):
+    """Patch code that newer Firefox versions may already have removed.
+
+    This is deliberately limited to obsolete integrations such as the old
+    BrowserGlue Normandy/Pocket hooks. Security-critical edits still use
+    ``patch`` and fail closed when their context changes.
+    """
+    path = os.path.join(SRC, rel_path)
+    if not os.path.exists(path):
+        failed.append(f"NOT FOUND: {rel_path}  [{description}]")
+        return
+
+    text = _read(path)
+    if old in text:
+        _write(path, text.replace(old, new, 1))
+        applied.append(f"OK  {description}")
+    elif new in text:
+        skipped.append(f"already applied: {description}")
+    else:
+        skipped.append(f"not present upstream: {description}")
 
 
 def patch_group(rel_path, edits, description):
@@ -71,8 +93,8 @@ def patch_group(rel_path, edits, description):
 # ── 0001: Remove Normandy from toolkit build ─────────────────
 patch(
     "toolkit/components/moz.build",
-    '    DIRS += ["featuregates", "messaging-system", "normandy"]',
-    '    DIRS += ["featuregates", "messaging-system"]  # RerFire: normandy removed',
+    '    DIRS += ["messaging-system", "normandy"]',
+    '    DIRS += ["messaging-system"]  # NordFox: normandy removed',
     "toolkit/components/moz.build: remove normandy dir",
 )
 
@@ -80,36 +102,36 @@ patch(
 patch(
     "browser/components/moz.build",
     '    "pocket",\n',
-    '    # "pocket",  # RerFire: removed\n',
+    '    # "pocket",  # NordFox: removed\n',
     "browser/components/moz.build: remove pocket dir",
 )
 
 # ── 0003: BrowserGlue – remove Normandy lazy import ──────────
-patch(
+optional_patch(
     "browser/components/BrowserGlue.sys.mjs",
     '  Normandy: "resource://normandy/Normandy.sys.mjs",\n',
-    '  // Normandy: removed by RerFire\n',
+    '  // Normandy: removed by NordFox\n',
     "BrowserGlue.sys.mjs: remove Normandy lazy import",
 )
 
 # ── 0004: BrowserGlue – remove Normandy.init() call ──────────
-patch(
+optional_patch(
     "browser/components/BrowserGlue.sys.mjs",
     "      lazy.Normandy.init();\n",
-    "      // lazy.Normandy.init();  // RerFire: removed\n",
+    "      // lazy.Normandy.init();  // NordFox: removed\n",
     "BrowserGlue.sys.mjs: remove Normandy.init()",
 )
 
 # ── 0005: BrowserGlue – remove Normandy.uninit() call ────────
-patch(
+optional_patch(
     "browser/components/BrowserGlue.sys.mjs",
     "      () => lazy.Normandy.uninit(),\n",
-    "      // () => lazy.Normandy.uninit(),  // RerFire: removed\n",
+    "      // () => lazy.Normandy.uninit(),  // NordFox: removed\n",
     "BrowserGlue.sys.mjs: remove Normandy.uninit()",
 )
 
 # ── 0006: BrowserGlue – remove ShieldFrame actor ─────────────
-patch(
+optional_patch(
     "browser/components/BrowserGlue.sys.mjs",
     """\
   ShieldFrame: {
@@ -125,23 +147,23 @@ patch(
       },
     },
     matches: ["about:studies*"],""",
-    "  // ShieldFrame: removed by RerFire (Normandy)\n  _ShieldFrameRemoved: {",
+    "  // ShieldFrame: removed by NordFox (Normandy)\n  _ShieldFrameRemoved: {",
     "BrowserGlue.sys.mjs: remove ShieldFrame actor",
 )
 
 # ── 0007: BrowserGlue – remove SaveToPocket lazy import ──────
-patch(
+optional_patch(
     "browser/components/BrowserGlue.sys.mjs",
     '  SaveToPocket: "chrome://pocket/content/SaveToPocket.sys.mjs",\n',
-    '  // SaveToPocket: removed by RerFire\n',
+    '  // SaveToPocket: removed by NordFox\n',
     "BrowserGlue.sys.mjs: remove SaveToPocket lazy import",
 )
 
 # ── 0008: BrowserGlue – remove SaveToPocket.init() call ──────
-patch(
+optional_patch(
     "browser/components/BrowserGlue.sys.mjs",
     "    lazy.SaveToPocket.init();\n",
-    "    // lazy.SaveToPocket.init();  // RerFire: removed\n",
+    "    // lazy.SaveToPocket.init();  // NordFox: removed\n",
     "BrowserGlue.sys.mjs: remove SaveToPocket.init()",
 )
 
@@ -156,7 +178,7 @@ patch(
   return nsRFPService::ReduceTimePrecisionAsMSecs(
       rawTime, GetRandomTimelineSeed(), mRTPCallerType);""",
     """\
-  // RerFire: force 100µs precision floor for all non-system callers
+  // NordFox: force 100µs precision floor for all non-system callers
   // to defeat averaging-based timing attacks (e.g. cache timing, Spectre).
   RTPCallerType callerType = (mRTPCallerType == RTPCallerType::SystemPrincipal)
       ? RTPCallerType::SystemPrincipal
@@ -223,7 +245,7 @@ ifndef MOZ_LTO_RUST_CROSS""",
             """\
 ifndef DEVELOPER_OPTIONS
 ifndef MOZ_DEBUG_RUST
-# RerFire: only auto-enable per-crate Rust LTO when LTO is enabled at all.
+# NordFox: only auto-enable per-crate Rust LTO when LTO is enabled at all.
 # Upstream enables it whenever MOZ_LTO_RUST_CROSS is unset, which forces Rust
 # bitcode into staticlibs and breaks links when rustc's LLVM != C++ clang's.
 ifdef MOZ_LTO
@@ -246,7 +268,7 @@ endif
 endif
 endif
 endif
-endif  # RerFire: close MOZ_LTO guard
+endif  # NordFox: close MOZ_LTO guard
 
 ifdef CARGO_INCREMENTAL""",
         ),
@@ -255,7 +277,7 @@ ifdef CARGO_INCREMENTAL""",
 )
 
 # ── REPORT ────────────────────────────────────────────────────
-print(f"\nRerFire patches: {len(applied)} applied, {len(skipped)} skipped, {len(failed)} failed\n")
+print(f"\nNordFox patches: {len(applied)} applied, {len(skipped)} skipped, {len(failed)} failed\n")
 for line in applied:
     print(f"  \033[32m✓\033[0m {line}")
 for line in skipped:

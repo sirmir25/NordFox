@@ -4,8 +4,11 @@
 build/
 theme/build/
 *.dmg
+*.exe
+*.zip
 *.tar.gz
 *.tar.xz
+*.tar.bz2
 
 # ── Separate projects that happen to live in this directory ──
 # Each has its own git remote; they are not part of NordFox.

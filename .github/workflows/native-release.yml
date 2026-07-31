@@ -1,0 +1,126 @@
+name: Native NordFox release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: GitHub release tag
+        required: true
+        default: v140.13.0-1
+        type: string
+      publish_release:
+        description: Publish the built files as a GitHub release
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    name: Linux x86_64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reclaim build disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          df -h /
+
+      - name: Install bootstrap dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes curl git make python3 python3-pip python3-venv xz-utils
+          python3 -m pip install --break-system-packages pillow
+
+      - name: Build and package NordFox
+        run: python3 build_native.py linux all
+
+      - name: Upload Linux package
+        uses: actions/upload-artifact@v4
+        with:
+          name: nordfox-linux-x86_64
+          path: |
+            NordFox-*-linux-x86_64.tar.*
+            NordFox-*-linux-x86_64.tar.*.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  windows:
+    name: Windows x86_64
+    runs-on: windows-2022
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MozillaBuild
+        shell: pwsh
+        run: |
+          Invoke-WebRequest `
+            -Uri https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe `
+            -OutFile MozillaBuildSetup.exe
+          Start-Process `
+            -FilePath .\MozillaBuildSetup.exe `
+            -ArgumentList '/S', '/D=C:\mozilla-build' `
+            -Wait `
+            -NoNewWindow
+          'C:\mozilla-build\bin' | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Reduce antivirus interference
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          Add-MpPreference -ExclusionPath $env:GITHUB_WORKSPACE
+          Add-MpPreference -ExclusionPath C:\mozilla-build
+          Add-MpPreference -ExclusionPath "$env:USERPROFILE\.mozbuild"
+
+      - name: Install branding tools
+        shell: pwsh
+        run: python -m pip install pillow
+
+      - name: Build and package NordFox
+        shell: pwsh
+        run: python build_native.py windows all
+
+      - name: Upload Windows packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: nordfox-windows-x86_64
+          path: |
+            NordFox-*-windows-x86_64.zip
+            NordFox-*-windows-x86_64.zip.sha256
+            NordFox-*-windows-x86_64-installer.exe
+            NordFox-*-windows-x86_64-installer.exe.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Publish release
+    if: ${{ inputs.publish_release }}
+    needs: [linux, windows]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download native packages
+        uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" release/* --clobber
+          else
+            gh release create "$RELEASE_TAG" release/* \
+              --title "NordFox ${RELEASE_TAG#v}" \
+              --notes "Native NordFox builds for Windows x86_64 and Linux x86_64. The Windows installer is not code-signed yet, so SmartScreen may require an explicit confirmation. SHA-256 files are included for every download."
+          fi

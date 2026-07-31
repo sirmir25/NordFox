@@ -4,15 +4,16 @@
 
 # NordFox
 
-**A quieter web — hardened LibreWolf, Nord-styled.**
+**A quieter web — hardened Firefox ESR, Nord-styled.**
 
-A reproducible recipe for building a privacy-hardened Firefox ESR 128 on
-macOS arm64, with the theme, prefs, and branding that go with it.
+A reproducible recipe for building privacy-hardened Firefox ESR 140.13 as a
+native Windows x86_64 or Linux x86_64 application, with the theme, prefs, and
+branding built into every package.
 
 <p>
-<img src="https://img.shields.io/badge/platform-macOS%20arm64-5E81AC?style=flat-square" alt="platform: macOS arm64">
-<img src="https://img.shields.io/badge/base-Firefox%20ESR%20128.11-81A1C1?style=flat-square" alt="base: Firefox ESR 128.11">
-<img src="https://img.shields.io/badge/patches-LibreWolf%20128.11.0--1-88C0D0?style=flat-square" alt="patches: LibreWolf 128.11.0-1">
+<img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-5E81AC?style=flat-square" alt="platform: Windows and Linux">
+<img src="https://img.shields.io/badge/base-Firefox%20ESR%20140.13-81A1C1?style=flat-square" alt="base: Firefox ESR 140.13">
+<img src="https://img.shields.io/badge/build-native%20x86__64-88C0D0?style=flat-square" alt="native x86_64 builds">
 <img src="https://img.shields.io/badge/license-MIT-8FBCBB?style=flat-square" alt="license: MIT">
 </p>
 
@@ -24,9 +25,11 @@ macOS arm64, with the theme, prefs, and branding that go with it.
 
 ## What this is
 
-Not a fork with its own release cadence. It is a build recipe: every artifact
-starts from an upstream Firefox ESR tarball and a LibreWolf patch set that you
-fetch yourself, both verified before anything is compiled.
+NordFox is a source build: every artifact starts from Mozilla's Firefox ESR
+tarball, verified against Mozilla's published SHA-256 manifest before anything
+is compiled. NordFox then applies its source hardening, privacy defaults,
+cross-platform branding, and local start pages before Mozilla's native build
+and packaging tools run.
 
 The result is an app bundle you built, from sources you can check, with the
 telemetry surfaces removed at the source level rather than switched off by a
@@ -38,8 +41,8 @@ preference that a future update can flip back.
 
 | | |
 |---|---|
-| **Normandy** | Shield studies — dropped from the toolkit build and from `BrowserGlue` |
-| **Pocket** | Dropped from the browser build and from `BrowserGlue` |
+| **Normandy** | Shield studies — dropped from the toolkit build |
+| **Pocket** | Dropped from the browser build |
 | **EME / DRM** | `--disable-eme` |
 | **Crash reporter** | `--disable-crashreporter` |
 | **Mozilla updater** | `--disable-updater` |
@@ -53,60 +56,67 @@ These are compiled out, not disabled by a pref.
   default falls to averaging attacks; this does not.
 - **Build flags.** `--enable-hardening`, `-fstack-protector-all`,
   `_FORTIFY_SOURCE=2`, sandbox enabled.
-- **Preferences.** ~340 prefs in `security/user.js`, based on
-  [arkenfox/user.js](https://github.com/arkenfox/user.js) and retuned for
-  ESR 128 — every one verified to still exist in this source tree.
+- **Preferences.** ~340 defaults in `security/user.js`, based on
+  [arkenfox/user.js](https://github.com/arkenfox/user.js), are compiled into
+  the app's AutoConfig payload.
 
-### Fixed
+### Build compatibility
 
-Two build breakages on current macOS that upstream ESR 128 predates:
-
-- Detection of Apple's `ld-1267`, which replaced `ld64` in macOS 15 / Xcode 16.
 - Auto Rust LTO is gated on `MOZ_LTO`, so `--disable-lto` actually disables LTO
-  end to end. Without this the linker meets Rust's LLVM-22 bitcode with an
-  LLVM-18 reader and dies on `libnssckbi.dylib`.
+  end to end across all native targets.
+- The legacy macOS pipeline also detects Apple's newer `ld-1267` linker.
 
 ### Styled
 
 A Nord-palette `userChrome.css` / `userContent.css`, plus a retro start page
 and new-tab page written in TypeScript — local, no network, no telemetry.
 
-## Requirements
+## Download
 
-macOS on Apple Silicon, plus:
+Use the latest GitHub release:
 
-```sh
-brew install python node llvm@18 git
-xcode-select --install
-# Rust: brew install rust, or rustup
-```
+- **Windows x86_64:** full `.exe` installer or portable `.zip`.
+- **Linux x86_64:** native `.tar.bz2` package.
 
-> [!IMPORTANT]
-> LLVM 18 specifically. ESR 128's NSS/NSPR bindgen produces incorrect bindings
-> under newer LLVM, which is also why LTO is off — see the comments in
-> `mozconfig` for the full reasoning.
+The Windows installer is currently unsigned, so SmartScreen may require an
+explicit confirmation. Every artifact has a matching `.sha256` file.
 
 ## Build
 
+### Linux x86_64
+
 ```sh
-./build.sh all      # deps → fetch → patch → build → brand → dmg
+python3 -m pip install pillow
+python3 build_native.py linux all
 ```
 
-First build takes 30–90 minutes and downloads roughly 5 GB of source.
+Use a supported 64-bit Linux distribution with Python 3.9+, Node.js, Git, at
+least 8 GB of memory, and at least 30 GB of free disk space. Mozilla's
+`mach bootstrap` installs the remaining compiler dependencies.
+
+### Windows x86_64
+
+Install [MozillaBuild](https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe),
+open PowerShell with `C:\mozilla-build\bin` on `PATH`, then run:
+
+```powershell
+python -m pip install pillow
+python build_native.py windows all
+```
+
+The result includes both a native full installer and a portable ZIP. Mozilla's
+own NSIS packaging flow creates the installer, including the Microsoft runtime
+redistributable.
 
 <details>
-<summary>Running it step by step</summary>
+<summary>Run one build stage at a time</summary>
 
 ```sh
-./build.sh deps     # check the toolchain is present
-./build.sh fetch    # download + verify Firefox source and LibreWolf patches
-./build.sh patch    # apply LibreWolf patches, then NordFox patches, install mozconfig
-./build.sh build    # compile, brand, package
-./build.sh brand    # re-brand and rebuild the DMG only — no recompile
+python3 build_native.py linux fetch
+python3 build_native.py linux prepare
+python3 build_native.py linux build
+python3 build_native.py linux package
 ```
-
-`./build.sh brand` is the fast path when you have changed branding, the theme,
-or the start page and do not want to wait for a rebuild.
 
 </details>
 
@@ -115,23 +125,10 @@ or the start page and do not want to wait for a rebuild.
 The Firefox tarball is checked against Mozilla's published `SHA256SUMS` before
 extraction.
 
-The LibreWolf patch set is *cloned* rather than downloaded as an archive:
-Codeberg generates archive tarballs on the fly and they are not
-byte-reproducible, so there is no stable checksum to pin. A git commit hash is
-content-addressed and stable, so it is something you can actually verify:
-
-```sh
-./build.sh fetch                       # prints the commit it resolved
-export LIBREWOLF_COMMIT=<that hash>    # subsequent fetches verify against it
-```
-
-> [!NOTE]
-> With `LIBREWOLF_COMMIT` unset the clone is taken on trust and the build says
-> so. Pin it once and the check is real from then on.
-
-A LibreWolf patch that fails to apply **aborts the build**. Each one carries a
-privacy change, and a build quietly missing one would still call itself
-hardened.
+Every required NordFox source edit is fail-closed: a patch whose context no
+longer matches aborts the build instead of silently shipping a less-hardened
+browser. Integrations already removed by newer Firefox versions are reported
+separately as safe skips.
 
 ## Install the theme and prefs only
 
@@ -150,7 +147,10 @@ destroys your original.
 
 | Path | |
 |---|---|
-| `build.sh` | fetch, patch, build, brand, package |
+| `build_native.py` | verified Windows/Linux fetch, patch, build, and package pipeline |
+| `mozconfigs/` | native hardened Linux and Windows build configurations |
+| `.github/workflows/native-release.yml` | builds both native packages and publishes a release |
+| `build.sh` | legacy macOS arm64 build pipeline |
 | `install.sh` | install theme + `user.js` into a profile |
 | `mozconfig` | hardened build configuration |
 | `patches/apply.py` | source patches, applied by string substitution |
@@ -170,11 +170,10 @@ atomic group — nothing is written unless every context resolves.
 
 ## Caveats
 
-- macOS arm64 only. Nothing here has been tried on Intel, Linux, or Windows.
-- The objdir is still named `obj-rerfire-aarch64`, after this project's earlier
-  name. Renaming it would invalidate an existing incremental build tree.
-- The app is ad-hoc signed, so Gatekeeper will want the usual right-click →
-  Open on first launch.
+- Windows and Linux packages are x86_64 only.
+- The Windows installer is unsigned; SmartScreen can warn on first launch.
+- Automatic updates remain disabled. Install a newer NordFox release manually.
+- The legacy macOS script still targets the earlier ESR 128 arm64 build tree.
 
 ## License
 
@@ -182,5 +181,5 @@ MIT for the code in this repository. The patch files quote Firefox source,
 which is MPL-2.0; `security/user.js` derives from arkenfox/user.js (MIT).
 
 <div align="center">
-<sub>Built on <a href="https://librewolf.net/">LibreWolf</a> · themed with <a href="https://www.nordtheme.com/">Nord</a></sub>
+<sub>LibreWolf-inspired privacy defaults · themed with <a href="https://www.nordtheme.com/">Nord</a></sub>
 </div>
