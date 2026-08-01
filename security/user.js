@@ -1,12 +1,16 @@
 // ============================================================
-// RerFire user.js – Security & Privacy Hardening
+// NordFox user.js – Security & Privacy Hardening
 // Based on arkenfox/user.js (github.com/arkenfox/user.js)
-// Target: Firefox ESR 128 / LibreWolf 128
+// Target: Firefox ESR 140
 // ============================================================
-// Overrides in this file survive browser updates.
-// Place in: <profile>/user.js
-// Every pref here is verified to exist in the ESR 128 source
-// (StaticPrefList.yaml / all.js / firefox.js or read at runtime).
+// Two ways this file reaches the browser:
+//   * build_native.py rewrites every user_pref() below as defaultPref()
+//     into the compiled-in autoconfig payload, so a NordFox build starts
+//     hardened with no profile setup at all;
+//   * install.sh copies it to <profile>/user.js for an existing Firefox.
+//
+// App-level settings that must survive creating a NEW profile live in
+// branding/policies.json instead — user.js cannot reach those.
 // ============================================================
 
 // ── STARTUP ─────────────────────────────────────────────────
@@ -222,8 +226,9 @@ user_pref("privacy.resistFingerprinting.reduceTimerPrecision.microseconds", 1000
 // ── WEBGL ────────────────────────────────────────────────────
 user_pref("webgl.disabled", true);
 user_pref("webgl.enable-webgl2", false);
-// WebGPU: off by default in ESR 128 (nightly-only), but pin it — it is a
-// large GPU attack/fingerprint surface and default flips ride in silently.
+// WebGPU shipped enabled on Windows in Firefox 141 and is riding the trains
+// elsewhere, so on ESR 140 this is no longer a redundant pin — it is a large
+// GPU attack and fingerprinting surface that would otherwise arrive by default.
 user_pref("dom.webgpu.enabled", false);
 
 // ── MEDIA / DRM / AUTOPLAY ───────────────────────────────────
@@ -336,3 +341,130 @@ user_pref("browser.uidensity", 1);                        // compact
 user_pref("browser.toolbars.bookmarks.visibility", "always");
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.pagethumbnails.capturing_disabled", true); // no page screenshots on disk
+
+// ============================================================
+// The sections below cover surfaces that did not exist in ESR 128.
+// Firefox grew a lot of new network-touching UI between 128 and 140.
+// ============================================================
+
+// ── AI / MACHINE LEARNING ────────────────────────────────────
+// Firefox 130+ ships an AI chatbot sidebar that proxies the page (or the
+// selection) to a third-party provider, plus on-device ML features that
+// download models on first use. None of it is wanted here.
+user_pref("browser.ml.enable", false);
+user_pref("browser.ml.chat.enabled", false);
+user_pref("browser.ml.chat.sidebar", false);
+user_pref("browser.ml.chat.page", false);
+user_pref("browser.ml.linkPreview.enabled", false);
+user_pref("browser.ml.modelHubRootUrl", "");
+// 140's "smart tab groups" cluster your open tabs with a local model.
+user_pref("browser.tabs.groups.smart.enabled", false);
+user_pref("browser.tabs.groups.smart.userEnabled", false);
+// Local-model translations still fetch language models from Mozilla, which
+// leaks which languages you read. Manual translation stays available.
+user_pref("browser.translations.automaticallyPopup", false);
+user_pref("browser.translations.enable", false);
+
+// ── URL BAR SUGGESTION SURFACES (all remote) ─────────────────
+// Each of these is a separate feed that sends what you type somewhere.
+user_pref("browser.urlbar.quicksuggest.enabled", false);
+user_pref("browser.urlbar.quicksuggest.dataCollection.enabled", false);
+user_pref("browser.urlbar.suggest.quickactions", false);
+user_pref("browser.urlbar.suggest.weather", false);
+user_pref("browser.urlbar.suggest.mdn", false);
+user_pref("browser.urlbar.suggest.yelp", false);
+user_pref("browser.urlbar.suggest.addons", false);
+user_pref("browser.urlbar.suggest.bookmark", true);       // local, keep
+user_pref("browser.urlbar.suggest.history", true);        // local, keep
+user_pref("browser.urlbar.suggest.clipboard", false);
+user_pref("browser.urlbar.suggest.recentsearches", false);
+user_pref("browser.urlbar.addons.featureGate", false);
+user_pref("browser.urlbar.mdn.featureGate", false);
+user_pref("browser.urlbar.yelp.featureGate", false);
+user_pref("browser.urlbar.weather.featureGate", false);
+user_pref("browser.urlbar.clipboard.featureGate", false);
+user_pref("browser.urlbar.quickactions.enabled", false);
+// Search-results-page interaction telemetry, added for the ad partnership.
+user_pref("browser.search.serpEventTelemetryCategorization.enabled", false);
+user_pref("browser.search.separatePrivateDefault", true);
+user_pref("browser.search.separatePrivateDefault.ui.enabled", true);
+
+// ── BOUNCE TRACKING PROTECTION ───────────────────────────────
+// Purges state for sites that are only ever visited as a redirect hop —
+// the standard workaround for third-party cookie blocking. Mode 1 = enabled.
+user_pref("privacy.bounceTrackingProtection.mode", 1);
+
+// ── URL QUERY STRIPPING ──────────────────────────────────────
+// Removes tracking parameters (utm_*, fbclid, gclid, msclkid, …) from
+// URLs before they are ever requested, so the click ID never leaves.
+user_pref("privacy.query_stripping.enabled", true);
+user_pref("privacy.query_stripping.enabled.pbmode", true);
+user_pref("privacy.query_stripping.strip_on_share.enabled", true);
+
+// ── REGION / MESSAGING PHONE-HOME ────────────────────────────
+// Firefox periodically asks Mozilla which country you are in, and polls a
+// remote "messaging system" for in-product ads and onboarding cards.
+user_pref("browser.region.network.url", "");
+user_pref("browser.region.update.enabled", false);
+user_pref("browser.aboutwelcome.enabled", false);
+user_pref("browser.messaging-system.whatsNewPanel.enabled", false);
+user_pref("browser.newtabpage.activity-stream.asrouter.providers.cfr", "");
+user_pref("browser.newtabpage.activity-stream.asrouter.providers.messaging-experiments", "");
+user_pref("browser.newtabpage.activity-stream.feeds.snippets", false);
+user_pref("browser.newtabpage.activity-stream.discoverystream.enabled", false);
+user_pref("browser.ping-centre.telemetry", false);
+user_pref("browser.vpn_promo.enabled", false);
+user_pref("browser.promo.focus.enabled", false);
+user_pref("browser.contentblocking.report.lockwise.enabled", false);
+user_pref("browser.contentblocking.report.monitor.enabled", false);
+user_pref("browser.contentblocking.report.vpn.enabled", false);
+// The Windows "default browser agent" is a scheduled task that reports
+// your default-browser choice to Mozilla. Compiled builds still ship it.
+user_pref("default-browser-agent.enabled", false);
+
+// ── MOZILLA ACCOUNTS / SYNC ──────────────────────────────────
+// Sync is end-to-end encrypted but still means an account, a device list
+// and a persistent identifier at Mozilla. policies.json disables the
+// feature outright; this keeps the UI from advertising it either way.
+user_pref("identity.fxaccounts.enabled", false);
+user_pref("identity.fxaccounts.toolbar.enabled", false);
+user_pref("services.sync.engines.addresses.available", false);
+
+// ── FORM AUTOFILL ────────────────────────────────────────────
+// Stored addresses and card numbers are exactly the data a compromised
+// page most wants. Form history is already off further up.
+user_pref("extensions.formautofill.addresses.enabled", false);
+user_pref("extensions.formautofill.creditCards.enabled", false);
+user_pref("extensions.formautofill.creditCards.available", false);
+user_pref("extensions.formautofill.heuristics.enabled", false);
+
+// ── DOWNLOADS ────────────────────────────────────────────────
+// Stage downloads in the OS temp dir so a partially-downloaded file is
+// never left in a directory other programs watch, and drop the temp copy
+// used to open a file in an external app once that app exits.
+user_pref("browser.download.start_downloads_in_tmp_dir", true);
+user_pref("browser.helperApps.deleteTempFileOnExit", true);
+user_pref("browser.download.useDownloadDir", false);      // always ask where
+user_pref("browser.download.manager.addToRecentDocs", false); // no OS "recents" trail
+
+// ── EXTRA ATTACK SURFACE ─────────────────────────────────────
+user_pref("media.navigator.enabled", false);              // no camera/mic enumeration
+user_pref("permissions.default.geo", 2);                  // 2 = block outright
+user_pref("permissions.default.camera", 2);
+user_pref("permissions.default.microphone", 2);
+user_pref("permissions.default.desktop-notification", 2);
+user_pref("permissions.default.xr", 2);
+user_pref("permissions.manager.defaultsUrl", "");         // no remote permission list
+user_pref("network.protocol-handler.external.ms-windows-store", false);
+user_pref("network.negotiate-auth.trusted-uris", "");     // no automatic Kerberos/NTLM
+user_pref("network.gio.supported-protocols", "");         // Linux: no gio:// handoff
+user_pref("network.file.disable_unc_paths", true);        // Windows: no UNC from the web
+user_pref("browser.fixup.alternate.enabled", false);      // don't guess www./.com
+
+// ── TLS (140 additions) ──────────────────────────────────────
+// Hybrid post-quantum key agreement: costs nothing, protects today's
+// traffic against being decrypted later.
+user_pref("security.tls.enable_kyber", true);
+user_pref("network.http.http3.enable_kyber", true);
+user_pref("security.insecure_connection_text.enabled", true); // spell out "Not Secure"
+user_pref("security.insecure_connection_text.pbmode.enabled", true);

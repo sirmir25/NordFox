@@ -2,6 +2,17 @@
 """
 NordFox source patcher – applies edits by string substitution.
 Robust against line-number drift between Firefox ESR point releases.
+Current target: Firefox ESR 140.
+
+Three levels of strictness, by what a wrong outcome would cost:
+
+    patch / patch_group  fail closed. A missing context aborts the build
+                         rather than shipping a browser that quietly lost
+                         one of its hardening changes.
+    compat_patch         may be skipped, but only when the file proves
+                         upstream has handled the problem itself.
+    optional_patch       may be skipped freely; used for integrations newer
+                         Firefox versions have already deleted.
 
 Usage: python3 patches/apply.py <firefox-source-root>
 """
@@ -50,6 +61,37 @@ def optional_patch(rel_path, old, new, description):
         skipped.append(f"already applied: {description}")
     else:
         skipped.append(f"not present upstream: {description}")
+
+
+def compat_patch(rel_path, old, new, description, marker):
+    """Patch a build-system incompatibility that upstream may have since fixed.
+
+    Different from ``optional_patch``: this is not about code that vanished,
+    it is about a workaround that stops being needed. Skipping is only safe
+    when the underlying problem is demonstrably already handled, so the caller
+    supplies ``marker`` — a string that must be present in the file for the
+    "upstream fixed it" branch to be taken. If neither our context nor the
+    marker is found, something genuinely unexpected changed and this fails
+    closed like any other patch.
+
+    Nothing security-relevant belongs here; these edits only decide whether
+    the build links, not what the resulting browser does.
+    """
+    path = os.path.join(SRC, rel_path)
+    if not os.path.exists(path):
+        failed.append(f"NOT FOUND: {rel_path}  [{description}]")
+        return
+
+    text = _read(path)
+    if new in text:
+        skipped.append(f"already applied: {description}")
+    elif old in text:
+        _write(path, text.replace(old, new, 1))
+        applied.append(f"OK  {description}")
+    elif marker in text:
+        skipped.append(f"fixed upstream: {description}")
+    else:
+        failed.append(f"context not found: {rel_path}  [{description}]")
 
 
 def patch_group(rel_path, edits, description):
@@ -190,13 +232,21 @@ patch(
 
 # (former 0010 removed: it only inserted a comment into
 #  SandboxPolicyContent.h — configd is not referenced anywhere in the
-#  ESR 128 mac sandbox policies, so there was nothing to remove.)
+#  mac sandbox policies, so there was nothing to remove.)
 
 # ── 0010: toolchain.configure – detect Apple ld-1267 (Sequoia/Xcode16+) ──
-# Firefox ESR 128 was released before Apple replaced ld64 with ld-1267.
-# Old detection: retcode==1 + "Logging ld64 options" in stderr.
-# New Apple linker prints "ld: unknown options:" instead – add that check.
-patch(
+# Apple replaced ld64 with ld-1267 in macOS 15 / Xcode 16. The old detection
+# is retcode==1 + "Logging ld64 options" in stderr; the new linker prints
+# "ld: unknown options:" instead, so configure misidentifies it.
+#
+# This is a compat_patch, not a hard patch: ESR 140 shipped well after that
+# Apple change, so upstream may already handle it. The marker is the linker
+# string the check is built around — if that has disappeared too, the file has
+# been restructured enough that silently skipping would be a guess, and this
+# fails instead. Only macOS hosts reach this code path at all, but apply.py
+# runs for every platform, so a hard failure here would break Linux and
+# Windows builds over a linker they never invoke.
+compat_patch(
     "build/moz.configure/toolchain.configure",
     """\
             retcode, stdout, stderr = get_cmd_output(*cmd, env=env)
@@ -212,14 +262,15 @@ patch(
                 kind = "ld64"\
 """,
     "toolchain.configure: detect Apple ld-1267 (macOS 15 Sequoia)",
+    marker="ld: unknown options:",
 )
 
 # ── 0011: rust.mk – do not auto-enable Rust LTO when --disable-lto ───
 # Mach unconditionally adds `-Clto` and `-Cembed-bitcode=yes` to release Rust
 # builds unless cross-language LTO is on, even when --disable-lto is set. That
-# forces LLVM bitcode (Rust 1.95 → LLVM 22) into staticlibs that the C++ linker
-# (LLVM 18) then tries to parse → "Unknown attribute kind (102)" / "Invalid
-# attribute group entry" → link failure on libnssckbi.dylib.
+# forces rustc's LLVM bitcode into staticlibs that the C++ linker then tries to
+# parse. Whenever the two toolchains carry different LLVM majors the result is
+# "Unknown attribute kind" / "Invalid attribute group entry" at link time.
 # Gate the auto-Rust-LTO block on MOZ_LTO being defined, so --disable-lto truly
 # disables LTO end-to-end.
 #

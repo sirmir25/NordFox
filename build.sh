@@ -2,6 +2,20 @@
 # =============================================================
 # NordFox build.sh – Clone LibreWolf, apply patches, build
 # Platform: macOS arm64
+#
+# SUPERSEDED. The current macOS build is
+#
+#     python3 build_native.py macos all
+#
+# which targets Firefox ESR 140 from Mozilla's own tarball, on the same
+# code path as the Windows and Linux packages, and ships the enterprise
+# policies this script knows nothing about.
+#
+# This script is kept because it is the only thing that still builds the
+# ESR 128 + LibreWolf-patch-set tree, and because an existing incremental
+# objdir is expensive to recreate. It is not maintained; nothing here has
+# been run against ESR 140.
+#
 # (Project directory and obj-dir name still say "rerfire" for backward
 #  compatibility with the existing incremental build tree.)
 # =============================================================

@@ -1,0 +1,38 @@
+# NordFox native macOS arm64 (Apple Silicon) release build.
+#
+# Unlike the legacy ESR 128 pipeline in build.sh, nothing here pins a
+# specific LLVM. ESR 128's NSS/NSPR bindgen needed clang 18 and predated
+# Apple's ld-1267 linker; ESR 140 handles both, so `mach bootstrap` picks
+# the toolchain and this file only states policy.
+ac_add_options --target=aarch64-apple-darwin
+ac_add_options --enable-release
+ac_add_options --disable-debug
+ac_add_options --disable-tests
+ac_add_options --disable-debug-symbols
+
+ac_add_options --with-app-name=nordfox
+ac_add_options --with-branding=browser/branding/unofficial
+
+ac_add_options --disable-lto
+ac_add_options --enable-hardening
+ac_add_options --disable-crashreporter
+ac_add_options --disable-updater
+ac_add_options --disable-eme
+ac_add_options --enable-sandbox
+ac_add_options --without-wasm-sandboxed-libraries
+
+# _FORTIFY_SOURCE is deliberately absent: Apple's libc fortifies a different
+# subset than glibc and the flag mostly produces noise here. Stack protection
+# is the part that carries over.
+export CFLAGS="-fstack-protector-all"
+export CXXFLAGS="-fstack-protector-all"
+export RUSTFLAGS="-C embed-bitcode=no"
+
+ac_add_options --enable-optimize="-O2"
+
+# There is no Apple Developer ID behind this build. build_native.py ad-hoc
+# signs the bundle before imaging it, which satisfies Apple Silicon's
+# mandatory code-signing; Gatekeeper still needs the right-click → Open path.
+
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-nordfox-macos
+mk_add_options AUTOCLOBBER=1

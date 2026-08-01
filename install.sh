@@ -123,11 +123,11 @@ install_to_profile() {
     info "Installed homepage.html + homepage.js (NordFox retro start page)"
   fi
 
-  # 4b. New-tab page. Copied for reference/manual use only: ESR 128 has
-  # no browser.newtab.url pref, so a profile-level install CANNOT change
-  # about:newtab — only the NordFox.app autoconfig can (it points
-  # AboutNewTab.newTabURL at the copy bundled in Contents/Resources).
-  # To update the app's new tab: theme/build.sh && ./build.sh brand.
+  # 4b. New-tab page. Copied for reference/manual use only: Firefox has had
+  # no browser.newtab.url pref since 61, so a profile-level install CANNOT
+  # change about:newtab — only a NordFox build's autoconfig can (it points
+  # AboutNewTab.newTabURL at the copy bundled next to the runtime).
+  # To update a NordFox build's new tab, rebuild it with build_native.py.
   if [[ -f "${theme_out}/newtab.html" ]]; then
     cp "${theme_out}/newtab.html" "${chrome_dir}/newtab.html"
     [[ -f "${theme_out}/newtab.js" ]] && \

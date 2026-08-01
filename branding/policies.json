@@ -1,0 +1,160 @@
+{
+  "_comment": [
+    "NordFox enterprise policies. Installed to <app>/distribution/policies.json",
+    "(Contents/Resources/distribution on macOS) by build_native.py.",
+    "",
+    "Why this file exists alongside security/user.js: user.js is per-profile.",
+    "A profile created from inside the browser (about:profiles, -P, a fresh",
+    "install directory) gets none of it. Policies are read by the application",
+    "before any profile is chosen, so the hardening below cannot be lost by",
+    "making a new profile.",
+    "",
+    "Nothing here is Locked unless removing the lock would let a remote page",
+    "or a Mozilla-side flag flip it back. The user still owns their browser."
+  ],
+
+  "policies": {
+    "DisableTelemetry": true,
+    "DisableFirefoxStudies": true,
+    "DisableFeedbackCommands": true,
+    "DisableFirefoxScreenshots": true,
+    "DisablePocket": true,
+    "DisableProfileImport": false,
+
+    "DisableFirefoxAccounts": true,
+
+    "DisableAppUpdate": true,
+    "AppAutoUpdate": false,
+    "DisableSystemAddonUpdate": true,
+    "DisableDefaultBrowserAgent": true,
+    "DontCheckDefaultBrowser": true,
+
+    "CaptivePortal": false,
+    "NetworkPrediction": false,
+
+    "OfferToSaveLogins": false,
+    "PasswordManagerEnabled": false,
+    "PromptForDownloadLocation": true,
+
+    "EnableTrackingProtection": {
+      "Value": true,
+      "Cryptomining": true,
+      "Fingerprinting": true,
+      "EmailTracking": true,
+      "Locked": false
+    },
+
+    "Cookies": {
+      "Behavior": "reject-tracker-and-partition-foreign",
+      "BehaviorPrivateBrowsing": "reject-tracker-and-partition-foreign",
+      "Locked": false
+    },
+
+    "SanitizeOnShutdown": {
+      "Cache": true,
+      "FormData": true,
+      "Sessions": true,
+      "SiteSettings": false,
+      "OfflineApps": true,
+      "Cookies": false,
+      "History": false,
+      "Downloads": false,
+      "Locked": false
+    },
+
+    "DNSOverHTTPS": {
+      "Enabled": true,
+      "ProviderURL": "https://dns.quad9.net/dns-query",
+      "Locked": false,
+      "Fallback": false
+    },
+
+    "PostQuantumKeyAgreementEnabled": true,
+
+    "EncryptedMediaExtensions": {
+      "Enabled": false,
+      "Locked": true
+    },
+
+    "PDFjs": {
+      "Enabled": true,
+      "EnablePermissions": false
+    },
+
+    "Permissions": {
+      "Camera": {
+        "BlockNewRequests": true,
+        "Locked": false
+      },
+      "Microphone": {
+        "BlockNewRequests": true,
+        "Locked": false
+      },
+      "Location": {
+        "BlockNewRequests": true,
+        "Locked": false
+      },
+      "Notifications": {
+        "BlockNewRequests": true,
+        "Locked": false
+      },
+      "VirtualReality": {
+        "BlockNewRequests": true,
+        "Locked": false
+      },
+      "Autoplay": {
+        "Default": "block-audio-video",
+        "Locked": false
+      }
+    },
+
+    "FirefoxHome": {
+      "Search": true,
+      "TopSites": false,
+      "SponsoredTopSites": false,
+      "Highlights": false,
+      "Pocket": false,
+      "SponsoredPocket": false,
+      "Stories": false,
+      "SponsoredStories": false,
+      "Snippets": false,
+      "Locked": false
+    },
+
+    "FirefoxSuggest": {
+      "WebSuggestions": false,
+      "SponsoredSuggestions": false,
+      "ImproveSuggest": false,
+      "Locked": true
+    },
+
+    "SearchSuggestEnabled": false,
+
+    "UserMessaging": {
+      "WhatsNew": false,
+      "ExtensionRecommendations": false,
+      "FeatureRecommendations": false,
+      "UrlbarInterventions": false,
+      "MoreFromMozilla": false,
+      "SkipOnboarding": true,
+      "Locked": false
+    },
+
+    "SearchEngines": {
+      "Default": "DuckDuckGo",
+      "PreventInstalls": false
+    },
+
+    "ExtensionUpdate": true,
+
+    "ExtensionSettings": {
+      "uBlock0@raymondhill.net": {
+        "installation_mode": "normal_installed",
+        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi",
+        "default_area": "menupanel",
+        "private_browsing": true,
+        "updates_disabled": false
+      }
+    }
+  }
+}

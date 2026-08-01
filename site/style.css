@@ -196,3 +196,25 @@ dl.faq dd { margin: 0 0 0 14px; line-height: 1.55; color: #3B4252; }
   a.download-btn { white-space: normal; }
   pre.term { font-size: 10px; }
 }
+
+/* Platform download tiles. Three across on desktop, stacking on narrow
+   screens; the art is 600x360 so it stays crisp at 2x. */
+.platforms {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 14px 0;
+}
+.platform-card {
+  display: block;
+  border: 1px solid #BFB8A4;
+  background: #2E3440;
+  line-height: 0;
+  box-shadow: 2px 2px 0 #D8DEE9;
+}
+.platform-card:hover { border-color: #5E81AC; }
+.platform-card img { width: 100%; height: auto; }
+
+@media (max-width: 640px) {
+  .platforms { grid-template-columns: 1fr; }
+}

@@ -1,14 +1,10 @@
 <div align="center">
 
-<img src="branding/preview.png" alt="NordFox" width="120">
+<img src="branding/og-banner.png" alt="NordFox — a quieter web. Hardened Firefox ESR, Nord-styled." width="820">
 
-# NordFox
-
-**A quieter web — hardened Firefox ESR, Nord-styled.**
-
-**New native desktop editions for Windows, Linux, and macOS.** Each edition
-builds Firefox ESR for its target operating system with NordFox hardening,
-privacy defaults, theme, and branding integrated into the application.
+**Native desktop editions for Windows, Linux, and macOS.** Each edition builds
+Firefox ESR for its target operating system with NordFox hardening, privacy
+defaults, theme, and branding integrated into the application.
 
 **[Choose your OS on the NordFox website](https://nordfox-sirmir25.pages.dev/#download)** ·
 **[View GitHub Releases](https://github.com/sirmir25/NordFox/releases)**
@@ -33,9 +29,9 @@ choose your operating system, and download its package. The same files are
 published under **[GitHub Releases](https://github.com/sirmir25/NordFox/releases)**.
 
 > [!NOTE]
-> The installation files have not been published yet. Windows and Linux
-> packaging is ready for release; the refreshed Apple Silicon macOS package is
-> still in preparation. The steps below apply as soon as the files appear.
+> No release has been published yet. All three platforms — Windows, Linux and
+> macOS — now build and package from the same pipeline, but no full build has
+> been run end to end, so the steps below apply as soon as the files appear.
 
 ### Windows 10/11 x86_64
 
@@ -135,16 +131,33 @@ These are compiled out, not disabled by a pref.
   every non-system caller, not only cross-origin-isolated ones. The 1 ms
   default falls to averaging attacks; this does not.
 - **Build flags.** `--enable-hardening`, `-fstack-protector-all`,
-  `_FORTIFY_SOURCE=2`, sandbox enabled.
-- **Preferences.** ~340 defaults in `security/user.js`, based on
+  `_FORTIFY_SOURCE=2` (glibc targets), sandbox enabled.
+- **Preferences.** 258 defaults in `security/user.js`, based on
   [arkenfox/user.js](https://github.com/arkenfox/user.js), are compiled into
   the app's AutoConfig payload.
+- **Enterprise policies.** `branding/policies.json` is compiled into the app
+  and read before any profile is loaded — so telemetry, Mozilla accounts, the
+  AI chatbot sidebar and the sponsored surfaces stay off even in a profile
+  created from scratch, which `user.js` alone cannot promise.
+- **An ad blocker.** uBlock Origin is installed on first run by policy, and
+  remains removable.
+- **Tracking parameters.** `utm_*`, `fbclid`, `gclid` and friends are stripped
+  before the request is made; bounce-tracking redirect hops get purged.
+
+> [!NOTE]
+> Two settings here are opinionated enough to call out: Mozilla accounts —
+> and therefore Sync — are disabled, and Firefox's translation feature is off
+> because its language models are fetched on demand. Both are one line in
+> `branding/policies.json` and `security/user.js` respectively.
 
 ### Build compatibility
 
 - Auto Rust LTO is gated on `MOZ_LTO`, so `--disable-lto` actually disables LTO
   end to end across all native targets.
-- The legacy macOS pipeline also detects Apple's newer `ld-1267` linker.
+- Apple's newer `ld-1267` linker is detected on macOS. This one is applied as a
+  *compat* patch: ESR 140 postdates the Apple change, so if upstream already
+  handles it the patch stands down instead of failing the build — but only when
+  it can prove upstream handles it.
 
 ### Styled
 
@@ -178,6 +191,18 @@ The result includes both a native full installer and a portable ZIP. Mozilla's
 own NSIS packaging flow creates the installer, including the Microsoft runtime
 redistributable.
 
+### macOS arm64
+
+Install the Xcode Command Line Tools (`xcode-select --install`), then:
+
+```sh
+python3 -m pip install pillow
+python3 build_native.py macos all
+```
+
+The app bundle is ad-hoc signed before it is put in the DMG — enough for Apple
+Silicon's mandatory code-signing, not an Apple notarization.
+
 <details>
 <summary>Run one build stage at a time</summary>
 
@@ -200,6 +225,11 @@ longer matches aborts the build instead of silently shipping a less-hardened
 browser. Integrations already removed by newer Firefox versions are reported
 separately as safe skips.
 
+Packaging is fail-closed too. A build is refused if the finished archive or
+app bundle is missing `nordfox.cfg`, the start page, the theme, or
+`distribution/policies.json` — because a package without those is not NordFox,
+just Firefox with a different icon.
+
 ## Install the theme and prefs only
 
 To apply the theme and `user.js` to an existing Firefox or LibreWolf profile
@@ -217,18 +247,18 @@ destroys your original.
 
 | Path | |
 |---|---|
-| `build_native.py` | verified Windows/Linux fetch, patch, build, and package pipeline |
-| `mozconfigs/` | native hardened Linux and Windows build configurations |
-| `.github/workflows/native-release.yml` | builds both native packages and publishes a release |
-| `build.sh` | legacy macOS arm64 build pipeline |
-| `install.sh` | install theme + `user.js` into a profile |
-| `mozconfig` | hardened build configuration |
+| `build_native.py` | verified fetch, patch, build, and package pipeline for all three platforms |
+| `mozconfigs/` | hardened Linux, macOS, and Windows build configurations |
+| `.github/workflows/native-release.yml` | builds all three native packages and publishes a release |
 | `patches/apply.py` | source patches, applied by string substitution |
-| `security/user.js` | privacy and security preferences |
+| `security/user.js` | per-profile privacy and security preferences |
+| `branding/policies.json` | app-level enterprise policies, survive a new profile |
+| `branding/` | icon, brand strings, autoconfig, artwork generators |
 | `theme/src/` | start page and new-tab page (TypeScript) |
 | `theme/build.sh` | compile `theme/src/` → `theme/build/` |
-| `branding/` | icon, brand strings, autoconfig |
+| `install.sh` | install theme + `user.js` into an existing profile |
 | `site/` | project landing page |
+| `build.sh`, `mozconfig` | superseded macOS ESR 128 + LibreWolf pipeline, unmaintained |
 
 Patches are applied by matching source text, not line numbers, so they survive
 line drift between ESR point releases. Interdependent edits are applied as an
@@ -240,12 +270,19 @@ atomic group — nothing is written unless every context resolves.
 
 ## Caveats
 
-- Windows and Linux packages are x86_64 only.
-- The refreshed macOS package is not published yet and will target Apple
-  Silicon.
-- The Windows installer is unsigned; SmartScreen can warn on first launch.
-- Automatic updates remain disabled. Install a newer NordFox release manually.
-- The legacy macOS script still targets the earlier ESR 128 arm64 build tree.
+- Windows and Linux packages are x86_64 only; macOS is arm64 only. No Intel
+  Mac build, no ARM Linux build.
+- Nothing is signed by a paid identity. SmartScreen warns on first run on
+  Windows, and Gatekeeper needs the right-click → **Open** path on macOS.
+- **Automatic updates are disabled**, which cuts both ways: no silent
+  remote-code channel, but also nothing to tell you the build has gone stale
+  while ESR ships security fixes. Watch the releases page.
+- uBlock Origin is fetched from addons.mozilla.org on first run. That is one
+  request to Mozilla in exchange for blocking everything else — a trade worth
+  naming rather than hiding.
+- `build.sh` and `mozconfig` are the retired ESR 128 + LibreWolf macOS path.
+  They are kept for the existing incremental objdir and have not been run
+  against ESR 140.
 
 ## License
 

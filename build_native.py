@@ -34,12 +34,26 @@ ARCHIVE_BASE = "https://archive.mozilla.org/pub/firefox/releases"
 
 MOZCONFIGS = {
     "linux": ROOT / "mozconfigs" / "linux-x86_64.mozconfig",
+    "macos": ROOT / "mozconfigs" / "macos-aarch64.mozconfig",
     "windows": ROOT / "mozconfigs" / "windows-x86_64.mozconfig",
 }
 OBJDIRS = {
     "linux": "obj-nordfox-linux",
+    "macos": "obj-nordfox-macos",
     "windows": "obj-nordfox-windows",
 }
+
+# Files copied next to the browser runtime. On macOS these land in
+# NordFox.app/Contents/Resources; on Windows and Linux, next to the binary.
+RUNTIME_FILES = (
+    "nordfox.cfg",
+    "nordfox-homepage.html",
+    "nordfox-homepage.js",
+    "nordfox-newtab.html",
+    "nordfox-newtab.js",
+    "nordfox-userChrome.css",
+    "nordfox-userContent.css",
+)
 
 
 def info(message: str) -> None:
@@ -201,6 +215,14 @@ def render_branding(branding_dir: Path) -> None:
         if target.exists():
             source_icon.save(target, format="ICO", sizes=ico_sizes)
 
+    # macOS wants an .icns, which Pillow cannot author reliably. Use the one
+    # generate_icon.py produced with iconutil and checked into the repo.
+    icns = ROOT / "branding" / "firefox.icns"
+    if icns.is_file():
+        for name in ("firefox.icns", "document.icns", "dmg.icns"):
+            if (branding_dir / name).exists():
+                shutil.copy2(icns, branding_dir / name)
+
 
 def generated_autoconfig() -> str:
     config = (ROOT / "branding" / "autoconfig" / "nordfox.cfg").read_text(encoding="utf-8")
@@ -213,6 +235,32 @@ def generated_autoconfig() -> str:
             continue
         prefs.append(stripped.replace("user_pref(", "defaultPref(", 1))
     return config.rstrip() + "\n\n// Generated from security/user.js at build time.\n" + "\n".join(prefs) + "\n"
+
+
+def runtime_moz_build() -> str:
+    """Emit browser/nordfox/moz.build.
+
+    The build system evaluates moz.build files as Python, so a malformed
+    payload here aborts `mach build` long after the six-hour clock has
+    started. The result is parsed before it is written.
+    """
+    lines = [
+        "# Generated NordFox runtime payload. Do not edit; see build_native.py.",
+        "FINAL_TARGET_FILES += [",
+    ]
+    lines += [f'    "{name}",' for name in RUNTIME_FILES]
+    lines += [
+        "]",
+        'FINAL_TARGET_FILES.defaults.pref += ["nordfox-autoconfig.js"]',
+        'FINAL_TARGET_FILES.distribution += ["policies.json"]',
+        "",
+    ]
+    text = "\n".join(lines)
+    try:
+        compile(text, "browser/nordfox/moz.build", "exec")
+    except SyntaxError as exc:
+        fail(f"Generated moz.build is not valid Python: {exc}")
+    return text
 
 
 def install_branding_and_runtime() -> None:
@@ -249,21 +297,9 @@ def install_branding_and_runtime() -> None:
         shutil.copy2(theme_output / f"{page}.js", runtime_dir / f"nordfox-{page}.js")
     shutil.copy2(ROOT / "theme" / "userChrome.css", runtime_dir / "nordfox-userChrome.css")
     shutil.copy2(ROOT / "theme" / "userContent.css", runtime_dir / "nordfox-userContent.css")
+    shutil.copy2(ROOT / "branding" / "policies.json", runtime_dir / "policies.json")
 
-    (runtime_dir / "moz.build").write_text(
-        """# Generated NordFox runtime payload.\n"
-        "FINAL_TARGET_FILES += [\n"
-        "    \"nordfox.cfg\",\n"
-        "    \"nordfox-homepage.html\",\n"
-        "    \"nordfox-homepage.js\",\n"
-        "    \"nordfox-newtab.html\",\n"
-        "    \"nordfox-newtab.js\",\n"
-        "    \"nordfox-userChrome.css\",\n"
-        "    \"nordfox-userContent.css\",\n"
-        "]\n"
-        "FINAL_TARGET_FILES.defaults.pref += [\"nordfox-autoconfig.js\"]\n""",
-        encoding="utf-8",
-    )
+    (runtime_dir / "moz.build").write_text(runtime_moz_build(), encoding="utf-8")
 
     browser_mozbuild = SOURCE_DIR / "browser" / "moz.build"
     browser_text = browser_mozbuild.read_text(encoding="utf-8")
@@ -273,14 +309,13 @@ def install_branding_and_runtime() -> None:
 
     manifest = SOURCE_DIR / "browser" / "installer" / "package-manifest.in"
     manifest_text = manifest.read_text(encoding="utf-8")
-    runtime_manifest = """@RESPATH@/nordfox.cfg
-@RESPATH@/nordfox-homepage.html
-@RESPATH@/nordfox-homepage.js
-@RESPATH@/nordfox-newtab.html
-@RESPATH@/nordfox-newtab.js
-@RESPATH@/nordfox-userChrome.css
-@RESPATH@/nordfox-userContent.css
-@RESPATH@/defaults/pref/nordfox-autoconfig.js"""
+    runtime_manifest = "\n".join(
+        [f"@RESPATH@/{name}" for name in RUNTIME_FILES]
+        + [
+            "@RESPATH@/defaults/pref/nordfox-autoconfig.js",
+            "@RESPATH@/distribution/policies.json",
+        ]
+    )
     if "@RESPATH@/nordfox.cfg" not in manifest_text:
         anchor = "@RESPATH@/platform.ini"
         if anchor not in manifest_text:
@@ -337,17 +372,68 @@ def newest(paths: list[Path], label: str) -> Path:
     return max(candidates, key=lambda path: path.stat().st_mtime)
 
 
+def newest_dir(paths: list[Path], label: str) -> Path:
+    candidates = [path for path in paths if path.is_dir()]
+    if not candidates:
+        fail(f"No {label} produced by mach package")
+    return max(candidates, key=lambda path: path.stat().st_mtime)
+
+
+# Shipping without these means shipping a browser that is not NordFox: no
+# hardened prefs, no policies, no start page. Packaging refuses to continue.
+REQUIRED_PAYLOAD = (
+    "nordfox.cfg",
+    "nordfox-homepage.html",
+    "nordfox-userChrome.css",
+    "distribution/policies.json",
+)
+
+
 def verify_archive(path: Path) -> None:
-    required = ("nordfox.cfg", "nordfox-homepage.html", "nordfox-userChrome.css")
     if zipfile.is_zipfile(path):
         with zipfile.ZipFile(path) as archive:
             names = archive.namelist()
     else:
         with tarfile.open(path, "r:*") as archive:
             names = archive.getnames()
-    for required_name in required:
+    for required_name in REQUIRED_PAYLOAD:
         if not any(name.endswith("/" + required_name) or name == required_name for name in names):
             fail(f"Packaged archive is missing {required_name}: {path}")
+
+
+def verify_bundle(app: Path) -> None:
+    resources = app / "Contents" / "Resources"
+    for required_name in REQUIRED_PAYLOAD:
+        if not (resources / required_name).is_file():
+            fail(f"App bundle is missing Contents/Resources/{required_name}: {app}")
+
+
+def build_dmg(app: Path, destination: Path) -> Path:
+    """Ad-hoc sign the bundle, then wrap it in a compressed DMG.
+
+    mach's own DMG is built before we can touch the bundle, so NordFox rolls
+    its own image: an unsigned app would be killed on launch by Apple Silicon's
+    mandatory code-signing, and re-signing after imaging would not help anyone
+    who downloaded the image.
+    """
+    run(["codesign", "--force", "--deep", "--sign", "-", str(app)])
+    staging = app.parent / "dmg-staging"
+    if staging.exists():
+        shutil.rmtree(staging)
+    staging.mkdir()
+    shutil.copytree(app, staging / app.name, symlinks=True)
+    (staging / "Applications").symlink_to("/Applications")
+    if destination.exists():
+        destination.unlink()
+    run([
+        "hdiutil", "create",
+        "-volname", "NordFox",
+        "-srcfolder", str(staging),
+        "-ov", "-format", "UDZO",
+        str(destination),
+    ])
+    shutil.rmtree(staging)
+    return destination
 
 
 def copy_artifact(source: Path, destination: Path) -> Path:
@@ -377,6 +463,13 @@ def package(platform: str) -> list[Path]:
                 package_file,
                 ROOT / f"NordFox-{NORDFOX_VERSION}-linux-x86_64{suffix}",
             )
+        )
+    elif platform == "macos":
+        app = newest_dir(list(dist.glob("*.app")), "macOS app bundle")
+        verify_bundle(app)
+        image = build_dmg(app, dist / f"NordFox-{NORDFOX_VERSION}-arm64.dmg")
+        artifacts.append(
+            copy_artifact(image, ROOT / f"NordFox-{NORDFOX_VERSION}-arm64.dmg")
         )
     else:
         portable = newest(list(dist.glob("*.zip")), "Windows portable package")

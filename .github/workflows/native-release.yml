@@ -51,6 +51,31 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  macos:
+    name: macOS arm64
+    runs-on: macos-15
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bootstrap dependencies
+        run: |
+          python3 -m pip install --break-system-packages pillow
+          df -h /
+
+      - name: Build and package NordFox
+        run: python3 build_native.py macos all
+
+      - name: Upload macOS package
+        uses: actions/upload-artifact@v4
+        with:
+          name: nordfox-macos-arm64
+          path: |
+            NordFox-*-arm64.dmg
+            NordFox-*-arm64.dmg.sha256
+          if-no-files-found: error
+          retention-days: 14
+
   windows:
     name: Windows x86_64
     runs-on: windows-2022
@@ -102,7 +127,7 @@ jobs:
   release:
     name: Publish release
     if: ${{ inputs.publish_release }}
-    needs: [linux, windows]
+    needs: [linux, macos, windows]
     runs-on: ubuntu-24.04
     steps:
       - name: Download native packages
@@ -122,5 +147,5 @@ jobs:
           else
             gh release create "$RELEASE_TAG" release/* \
               --title "NordFox ${RELEASE_TAG#v}" \
-              --notes "Native NordFox builds for Windows x86_64 and Linux x86_64. The Windows installer is not code-signed yet, so SmartScreen may require an explicit confirmation. SHA-256 files are included for every download."
+              --notes "Native NordFox builds for Windows x86_64, Linux x86_64 and macOS arm64. Neither the Windows installer nor the macOS app is code-signed by a paid identity, so SmartScreen may require an explicit confirmation and Gatekeeper needs the right-click -> Open path on first launch. SHA-256 files are included for every download."
           fi
